@@ -90,6 +90,19 @@ body{background:radial-gradient(ellipse at 5% 8%,rgba(217,79,154,.13),transparen
 /* Doom: charcoal and clear red-orange. */
 .theme-preview.doom-preview{background:#160c0b}.doom-preview .incoming{background:#681b16;color:#ffd9bf}.doom-preview .outgoing{background:#ef5327;color:#fff}
 .chat[data-theme="doom"] .chat-body{background-color:#100a09;background-image:none}.chat[data-theme="doom"] .msg-row:not(.mine) .bubble{background:#681b16;color:#ffd9bf}.chat[data-theme="doom"] .msg-row.mine .bubble{background:#ef5327;color:#fff}
+
+/* Use the five approved image files as real per-chat wallpapers. */
+.chat[data-theme="bvsc"] .chat-body,
+.chat[data-theme="barca"] .chat-body,
+.chat[data-theme="realmadrid"] .chat-body,
+.chat[data-theme="alien"] .chat-body,
+.chat[data-theme="doom"] .chat-body{position:relative;isolation:isolate;background-position:center;background-repeat:no-repeat;background-size:cover}
+.chat[data-theme="bvsc"] .chat-body{background-color:#071a36;background-image:linear-gradient(rgba(4,12,25,.28),rgba(4,12,25,.28)),url("./assets/chat-themes/bvsc.png")}
+.chat[data-theme="barca"] .chat-body{background-color:#101d3a;background-image:linear-gradient(rgba(4,8,20,.28),rgba(4,8,20,.28)),url("./assets/chat-themes/barca.png")}
+.chat[data-theme="realmadrid"] .chat-body{background-color:#091528;background-image:linear-gradient(rgba(4,8,17,.25),rgba(4,8,17,.25)),url("./assets/chat-themes/realmadrid.png")}
+.chat[data-theme="alien"] .chat-body{background-color:#050b08;background-image:linear-gradient(rgba(0,5,3,.24),rgba(0,5,3,.24)),url("./assets/chat-themes/alien.png")}
+.chat[data-theme="doom"] .chat-body{background-color:#100a09;background-image:linear-gradient(rgba(10,3,2,.24),rgba(10,3,2,.24)),url("./assets/chat-themes/doom.png")}
+.chat[data-theme="bvsc"] .chat-body:before,.chat[data-theme="barca"] .chat-body:before,.chat[data-theme="realmadrid"] .chat-body:before,.chat[data-theme="alien"] .chat-body:before,.chat[data-theme="doom"] .chat-body:before{content:none!important;background:none!important}
 </style></head>
 <body><div class="shell" id="shell"><header class="app-topbar"><div class="top-brand"><div class="brand">✳</div><strong>Üzenetek</strong></div><div class="profile-search-block"><label class="search profile-search"><span>⌕</span><input id="profileSearch" placeholder="Profil keresése…" autocomplete="off" oninput="searchProfiles(this.value)"></label><div id="profileResults" class="profile-results"></div></div><nav class="top-nav"><button class="nav-tab active" id="chatNav" onclick="showChats()">Chat</button><button class="nav-tab" id="profileNav" onclick="showProfile()">Profil</button><button class="nav-tab" id="settingsNav" onclick="showSettings()">Beállítások</button><button class="nav-tab" id="friendsNav" onclick="showFriends()">Ismerősök</button></nav><div class="top-actions"><button class="new-group" onclick="openModal()">＋ <span>Új csoport</span></button><button id="railAvatar" class="rail-avatar" onclick="showProfile()" aria-label="Profil">♙</button></div></header>
 <aside class="sidebar"><div class="side-head"><div class="head-row"><h1>Csevegések</h1></div><div class="tabs"><button class="tab active" onclick="setFilter('all',this)">Mind</button><button class="tab" onclick="setFilter('unread',this)">Olvasatlan</button><button class="tab" onclick="setFilter('groups',this)">Csoportok</button></div></div><label class="search chat-search"><span>⌕</span><input id="search" placeholder="Keresés a chatekben" oninput="renderList()"></label><div class="list" id="list"></div></aside>
