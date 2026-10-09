@@ -77,7 +77,12 @@
     "groupInvitesSent": {
       "$sender": {
         ".read": "auth != null && auth.token.email_verified === true && auth.uid === $sender",
-        ".write": "auth != null && auth.token.email_verified === true && auth.uid === $sender"
+        ".write": "auth != null && auth.token.email_verified === true && auth.uid === $sender",
+        "$group": {
+          "$target": {
+            ".write": "auth != null && auth.token.email_verified === true && (auth.uid === $sender || (auth.uid === $target && (root.child('groupInvitesReceived').child($target).child($group).child('status').val() === 'accepted' || root.child('groupInvitesReceived').child($target).child($group).child('status').val() === 'declined')))"
+          }
+        }
       }
     },
     "conversations": {
@@ -106,6 +111,9 @@
               }
             }
           }
+        },
+        "timer": {
+          ".write": "auth != null && auth.token.email_verified === true && root.child('conversations').child($id).child('members').child(auth.uid).val() === true && (newData.val() === 'off' || newData.val() === '1h' || newData.val() === '24h' || newData.val() === '7d')"
         }
       }
     },
