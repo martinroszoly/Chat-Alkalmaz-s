@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "Üzenetek – Chat",
+  "short_name": "Üzenetek",
+  "description": "Privát és csoportos beszélgetések",
+  "lang": "hu",
+  "start_url": "./?source=installed-app",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#101b2b",
+  "theme_color": "#14243a",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
