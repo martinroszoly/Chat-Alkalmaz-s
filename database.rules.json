@@ -53,7 +53,7 @@
         ".read": "auth != null && auth.token.email_verified === true && auth.uid === $sender",
         "$target": {
           ".read": "auth != null && auth.token.email_verified === true && (auth.uid === $sender || auth.uid === $target)",
-          ".write": "auth != null && auth.token.email_verified === true && auth.uid === $sender"
+          ".write": "auth != null && auth.token.email_verified === true && (auth.uid === $sender || (auth.uid === $target && data.exists() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'accepted' || newData.child('status').val() === 'declined')))"
         }
       }
     },
@@ -61,7 +61,7 @@
       "$uid": {
         ".read": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
         "$other": {
-          ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid && (root.child('friendRequests').child($uid).child($other).child('status').val() === 'accepted' || root.child('friendRequests').child($other).child($uid).child('status').val() === 'accepted')"
+          ".write": "auth != null && auth.token.email_verified === true && (auth.uid === $uid || auth.uid === $other) && newData.val() === true && (root.child('friendRequests').child($uid).child($other).child('status').val() === 'accepted' || root.child('friendRequests').child($other).child($uid).child('status').val() === 'accepted')"
         }
       }
     },
@@ -98,7 +98,13 @@
         "messages": {
           "$msg": {
             ".write": "auth != null && auth.token.email_verified === true && root.child('conversations').child($id).child('members').child(auth.uid).val() === true && (newData.child('senderUid').val() === auth.uid || data.child('senderUid').val() === auth.uid)",
-            ".validate": "newData.hasChildren(['senderUid','text','createdAt']) && newData.child('text').isString() && newData.child('text').val().length <= 4000 && newData.child('createdAt').isNumber()"
+            ".validate": "newData.hasChildren(['senderUid','text','createdAt']) && newData.child('text').isString() && newData.child('text').val().length <= 4000 && newData.child('createdAt').isNumber()",
+            "likes": {
+              "$uid": {
+                ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid && root.child('conversations').child($id).child('members').child(auth.uid).val() === true",
+                ".validate": "newData.isBoolean() && newData.val() === true"
+              }
+            }
           }
         }
       }
