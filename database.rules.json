@@ -4,8 +4,8 @@
     ".write": false,
     "users": {
       "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid",
+        ".read": "auth != null && (auth.uid === $uid || (auth.token.email === 'martin.roszoly2002@gmail.com'))",
+        ".write": "auth != null && (auth.uid === $uid || (auth.token.email_verified === true && auth.token.email === 'martin.roszoly2002@gmail.com'))",
         ".validate": "newData.hasChildren(['username','email','avatar'])",
         "username": {
           ".validate": "newData.isString() && newData.val().length <= 40"
@@ -19,12 +19,13 @@
         "bio": {
           ".validate": "newData.isString() && newData.val().length <= 280"
         }
-      }
+      },
+      ".read": "auth != null && auth.token.email_verified === true && auth.token.email === 'martin.roszoly2002@gmail.com'"
     },
     "publicProfiles": {
       "$uid": {
         ".read": "auth != null && auth.token.email_verified === true",
-        ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
+        ".write": "auth != null && auth.token.email_verified === true && (auth.uid === $uid || (auth.token.email === 'martin.roszoly2002@gmail.com'))",
         ".validate": "newData.hasChildren(['uid','username','avatar']) && newData.child('uid').val() === $uid",
         "username": {
           ".validate": "newData.isString() && newData.val().length <= 40"
@@ -117,7 +118,7 @@
       "$uid": {
         ".read": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
         "$id": {
-          ".write": "auth != null && auth.token.email_verified === true && root.child('conversations').child($id).child('members').child($uid).val() === true && (auth.uid === $uid || root.child('conversations').child($id).child('members').child(auth.uid).val() === true)"
+          ".write": "auth != null && auth.token.email_verified === true && ((auth.uid === $uid && root.child('conversations').child($id).child('members').child(auth.uid).val() === true) || (root.child('conversations').child($id).child('members').child($uid).val() === true && root.child('conversations').child($id).child('members').child(auth.uid).val() === true))"
         }
       }
     },
@@ -150,6 +151,17 @@
           ".write": "auth != null && auth.token.email_verified === true && (auth.uid === $uid || (root.child('calls').child($id).child('callerUid').val() === auth.uid && root.child('calls').child($id).child('calleeUid').val() === $uid))"
         }
       }
+    },
+    "bannedUids": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || (auth.token.email_verified === true && auth.token.email === 'martin.roszoly2002@gmail.com'))",
+        ".write": "auth != null && auth.token.email_verified === true && auth.token.email === 'martin.roszoly2002@gmail.com'",
+        ".validate": "newData.val() === true"
+      }
+    },
+    "bannedEmails": {
+      ".read": "auth != null && auth.token.email_verified === true && auth.token.email === 'martin.roszoly2002@gmail.com'",
+      ".write": "auth != null && auth.token.email_verified === true && auth.token.email === 'martin.roszoly2002@gmail.com'"
     }
   }
 }
