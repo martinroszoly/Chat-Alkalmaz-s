@@ -1,0 +1,143 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['username','email','avatar'])",
+        "username": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "email": {
+          ".validate": "newData.isString() && newData.val() === auth.token.email"
+        },
+        "avatar": {
+          ".validate": "newData.isString() && newData.val().length <= 900000"
+        },
+        "bio": {
+          ".validate": "newData.isString() && newData.val().length <= 280"
+        }
+      }
+    },
+    "publicProfiles": {
+      "$uid": {
+        ".read": "auth != null && auth.token.email_verified === true",
+        ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['uid','username','avatar']) && newData.child('uid').val() === $uid",
+        "username": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "avatar": {
+          ".validate": "newData.isString() && newData.val().length <= 900000"
+        },
+        "bio": {
+          ".validate": "newData.isString() && newData.val().length <= 280"
+        }
+      }
+    },
+    "friendRequests": {
+      "$target": {
+        "$sender": {
+          ".read": "auth != null && auth.token.email_verified === true && (auth.uid === $target || auth.uid === $sender)",
+          ".write": "auth != null && auth.token.email_verified === true && ((auth.uid === $sender && ((!data.exists() && newData.child('status').val() === 'pending') || (data.exists() && newData.child('status').val() === 'cancelled'))) || (auth.uid === $target && data.exists() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'accepted' || newData.child('status').val() === 'declined')))",
+          ".validate": "newData.hasChildren(['senderUid','status']) && newData.child('senderUid').val() === $sender"
+        }
+      }
+    },
+    "sentRequests": {
+      "$sender": {
+        ".read": "auth != null && auth.token.email_verified === true && auth.uid === $sender",
+        "$target": {
+          ".read": "auth != null && auth.token.email_verified === true && (auth.uid === $sender || auth.uid === $target)",
+          ".write": "auth != null && auth.token.email_verified === true && auth.uid === $sender"
+        }
+      }
+    },
+    "friends": {
+      "$uid": {
+        ".read": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
+        "$other": {
+          ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid && (root.child('friendRequests').child($uid).child($other).child('status').val() === 'accepted' || root.child('friendRequests').child($other).child($uid).child('status').val() === 'accepted')"
+        }
+      }
+    },
+    "groupInvitesReceived": {
+      "$target": {
+        ".read": "auth != null && auth.token.email_verified === true && auth.uid === $target",
+        "$group": {
+          ".read": "auth != null && auth.token.email_verified === true && (auth.uid === $target || data.child('senderUid').val() === auth.uid)",
+          ".write": "auth != null && auth.token.email_verified === true && ((auth.uid === $target && data.exists() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'accepted' || newData.child('status').val() === 'declined')) || (root.child('conversations').child($group).child('owner').val() === auth.uid && ((!data.exists() && newData.child('status').val() === 'pending') || (data.exists() && newData.child('status').val() === 'cancelled'))))"
+        }
+      }
+    },
+    "groupInvitesSent": {
+      "$sender": {
+        ".read": "auth != null && auth.token.email_verified === true && auth.uid === $sender",
+        ".write": "auth != null && auth.token.email_verified === true && auth.uid === $sender"
+      }
+    },
+    "conversations": {
+      "$id": {
+        ".read": "auth != null && auth.token.email_verified === true && data.child('members').child(auth.uid).val() === true",
+        ".write": "auth != null && auth.token.email_verified === true && !data.exists() && newData.child('owner').val() === auth.uid && ((newData.child('type').val() === 'group' && newData.child('members').child(auth.uid).val() === true) || (newData.child('type').val() === 'private' && newData.child('members').child(auth.uid).val() === true && newData.child('members').child(newData.child('peerUid').val()).val() === true && (root.child('friendRequests').child(auth.uid).child(newData.child('peerUid').val()).child('status').val() === 'accepted' || root.child('friendRequests').child(newData.child('peerUid').val()).child(auth.uid).child('status').val() === 'accepted')))",
+        "members": {
+          "$uid": {
+            ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid && newData.val() === true && root.child('groupInvitesReceived').child(auth.uid).child($id).child('status').val() === 'accepted'"
+          }
+        },
+        "name": {
+          ".write": "auth != null && auth.token.email_verified === true && root.child('conversations').child($id).child('owner').val() === auth.uid && newData.isString() && newData.val().length <= 60"
+        },
+        "avatar": {
+          ".write": "auth != null && auth.token.email_verified === true && root.child('conversations').child($id).child('owner').val() === auth.uid && newData.isString() && newData.val().length <= 900000"
+        },
+        "messages": {
+          "$msg": {
+            ".write": "auth != null && auth.token.email_verified === true && root.child('conversations').child($id).child('members').child(auth.uid).val() === true && (newData.child('senderUid').val() === auth.uid || data.child('senderUid').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['senderUid','text','createdAt']) && newData.child('text').isString() && newData.child('text').val().length <= 4000 && newData.child('createdAt').isNumber()"
+          }
+        }
+      }
+    },
+    "userConversations": {
+      "$uid": {
+        ".read": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
+        "$id": {
+          ".write": "auth != null && auth.token.email_verified === true && root.child('conversations').child($id).child('members').child($uid).val() === true && (auth.uid === $uid || root.child('conversations').child($id).child('members').child(auth.uid).val() === true)"
+        }
+      }
+    },
+    "calls": {
+      "$id": {
+        ".read": "auth != null && auth.token.email_verified === true && (data.child('callerUid').val() === auth.uid || data.child('calleeUid').val() === auth.uid)",
+        ".write": "auth != null && auth.token.email_verified === true && !data.exists() && newData.child('callerUid').val() === auth.uid && (root.child('friends').child(auth.uid).child(newData.child('calleeUid').val()).val() === true || root.child('friendRequests').child(auth.uid).child(newData.child('calleeUid').val()).child('status').val() === 'accepted' || root.child('friendRequests').child(newData.child('calleeUid').val()).child(auth.uid).child('status').val() === 'accepted')",
+        "status": {
+          ".write": "auth != null && auth.token.email_verified === true && (root.child('calls').child($id).child('callerUid').val() === auth.uid || root.child('calls').child($id).child('calleeUid').val() === auth.uid)"
+        },
+        "answer": {
+          ".write": "auth != null && auth.token.email_verified === true && root.child('calls').child($id).child('calleeUid').val() === auth.uid"
+        },
+        "endedAt": {
+          ".write": "auth != null && auth.token.email_verified === true && (root.child('calls').child($id).child('callerUid').val() === auth.uid || root.child('calls').child($id).child('calleeUid').val() === auth.uid)"
+        },
+        "candidates": {
+          "$side": {
+            "$candidate": {
+              ".write": "auth != null && auth.token.email_verified === true && (($side === 'caller' && root.child('calls').child($id).child('callerUid').val() === auth.uid) || ($side === 'callee' && root.child('calls').child($id).child('calleeUid').val() === auth.uid))"
+            }
+          }
+        }
+      }
+    },
+    "callInbox": {
+      "$uid": {
+        ".read": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
+        "$id": {
+          ".write": "auth != null && auth.token.email_verified === true && (auth.uid === $uid || (root.child('calls').child($id).child('callerUid').val() === auth.uid && root.child('calls').child($id).child('calleeUid').val() === $uid))"
+        }
+      }
+    }
+  }
+}
