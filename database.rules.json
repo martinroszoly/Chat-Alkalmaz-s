@@ -41,7 +41,7 @@
       "$target": {
         "$sender": {
           ".read": "auth != null && auth.token.email_verified === true && (auth.uid === $target || auth.uid === $sender)",
-          ".write": "auth != null && auth.token.email_verified === true && ((auth.uid === $sender && ((!data.exists() && newData.child('status').val() === 'pending') || (data.exists() && newData.child('status').val() === 'cancelled'))) || (auth.uid === $target && data.exists() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'accepted' || newData.child('status').val() === 'declined')))",
+          ".write": "auth != null && auth.token.email_verified === true && ((auth.uid === $sender && ((!data.exists() && root.child('publicProfiles').child($target).exists() && newData.child('status').val() === 'pending') || (data.exists() && newData.child('status').val() === 'cancelled'))) || (auth.uid === $target && data.exists() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'accepted' || newData.child('status').val() === 'declined')))",
           ".validate": "newData.hasChildren(['senderUid','status']) && newData.child('senderUid').val() === $sender"
         }
       }
@@ -68,7 +68,7 @@
         ".read": "auth != null && auth.token.email_verified === true && auth.uid === $target",
         "$group": {
           ".read": "auth != null && auth.token.email_verified === true && (auth.uid === $target || data.child('senderUid').val() === auth.uid)",
-          ".write": "auth != null && auth.token.email_verified === true && ((auth.uid === $target && data.exists() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'accepted' || newData.child('status').val() === 'declined')) || (root.child('conversations').child($group).child('owner').val() === auth.uid && ((!data.exists() && newData.child('status').val() === 'pending') || (data.exists() && newData.child('status').val() === 'cancelled'))))"
+          ".write": "auth != null && auth.token.email_verified === true && ((auth.uid === $target && data.exists() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'accepted' || newData.child('status').val() === 'declined')) || (root.child('conversations').child($group).child('owner').val() === auth.uid && (root.child('friendRequests').child($target).child(auth.uid).child('status').val() === 'accepted' || root.child('friendRequests').child(auth.uid).child($target).child('status').val() === 'accepted') && ((!data.exists() && newData.child('status').val() === 'pending') || (data.exists() && newData.child('status').val() === 'cancelled'))))"
         }
       }
     },
