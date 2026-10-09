@@ -98,8 +98,8 @@
         },
         "messages": {
           "$msg": {
-            ".write": "auth != null && auth.token.email_verified === true && root.child('conversations').child($id).child('members').child(auth.uid).val() === true && (newData.child('senderUid').val() === auth.uid || data.child('senderUid').val() === auth.uid)",
-            ".validate": "newData.hasChildren(['senderUid','text','createdAt']) && newData.child('text').isString() && newData.child('text').val().length <= 4000 && newData.child('createdAt').isNumber()",
+            ".write": "auth != null && auth.token.email_verified === true && root.child('conversations').child($id).child('members').child(auth.uid).val() === true && ((!data.exists() && newData.child('senderUid').val() === auth.uid) || (data.exists() && data.child('senderUid').val() === auth.uid))",
+            ".validate": "newData.hasChildren(['senderUid','text','createdAt']) && newData.child('text').isString() && newData.child('text').val().length <= 4000 && newData.child('createdAt').isNumber() && ((!data.exists() && newData.child('senderUid').val() === auth.uid) || (data.exists() && newData.child('senderUid').val() === data.child('senderUid').val()))",
             "imageData": {
               ".validate": "newData.isString() && newData.val().length <= 760000"
             },
