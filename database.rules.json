@@ -35,7 +35,8 @@
         "bio": {
           ".validate": "newData.isString() && newData.val().length <= 280"
         }
-      }
+      },
+      ".read": "auth != null && auth.token.email_verified === true"
     },
     "friendRequests": {
       "$target": {
@@ -43,7 +44,8 @@
           ".read": "auth != null && auth.token.email_verified === true && (auth.uid === $target || auth.uid === $sender)",
           ".write": "auth != null && auth.token.email_verified === true && ((auth.uid === $sender && ((!data.exists() && root.child('publicProfiles').child($target).exists() && newData.child('status').val() === 'pending') || (data.exists() && newData.child('status').val() === 'cancelled'))) || (auth.uid === $target && data.exists() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'accepted' || newData.child('status').val() === 'declined')))",
           ".validate": "newData.hasChildren(['senderUid','status']) && newData.child('senderUid').val() === $sender"
-        }
+        },
+        ".read": "auth != null && auth.token.email_verified === true && auth.uid === $target"
       }
     },
     "sentRequests": {
