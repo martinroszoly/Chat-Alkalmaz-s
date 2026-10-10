@@ -20,7 +20,7 @@ function showCallOverlay(title, status, incoming = false, avatar = '') {
 function hideCallOverlay() { document.getElementById('callOverlay').style.display = 'none'; }
 function ringIncomingCall() {
   stopCallRingtone();
-  if (window.ChatNative?.isNative) { return; }
+  if (window.ChatNative?.isNative) { window.ChatNative.phone.startRingtone().catch(console.warn); return; }
   // Browsers cannot access the device's default ringtone; this is the web fallback.
   try {
     ringContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -162,3 +162,12 @@ async function toggleCallSpeaker() {
     callSpeaker=enabled;document.getElementById('callSpeakerButton').setAttribute('aria-pressed',String(enabled));
   }catch(e){toast(e.message||'Nem sikerült hangkimenetet váltani');}
 }
+
+/* Visual and interaction fixes loaded after the chat UI is available. */
+(() => {
+  const css = `.group-photo-actions button{min-height:43px;padding:10px 14px;border:1px solid #3b6479!important;border-radius:10px!important;background:#19364b!important;color:#eaf7fb!important;font:700 14px 'DM Sans',sans-serif!important;white-space:nowrap;box-shadow:none!important}.group-photo-actions button+button{border-color:#6a4a57!important;background:#352633!important;color:#ffdce4!important}.group-delete{margin-right:auto!important;background:#b92745!important;color:#fff!important}.person.selected{background:transparent!important;box-shadow:none!important}.nav-alert:not([hidden]){display:inline-grid!important;place-items:center!important;background:#ef3d5d!important;color:#fff!important}.chat .bubble{background:#17354a!important;color:#f4fbff!important}.chat .msg-row.mine .bubble{background:linear-gradient(115deg,#00aeb0,#087fac)!important;color:#fff!important}.chat[data-theme="barca"] .msg-row:not(.mine) .bubble{background:#0b3b75!important}.chat[data-theme="barca"] .msg-row.mine .bubble{background:linear-gradient(115deg,#004d98,#a50044)!important}.chat[data-theme="bvsc"] .msg-row:not(.mine) .bubble{background:#0b3773!important}.chat[data-theme="bvsc"] .msg-row.mine .bubble{background:linear-gradient(115deg,#0758ad,#f0c52f)!important;color:#071b3e!important}.chat[data-theme="realmadrid"] .msg-row:not(.mine) .bubble{background:#fff!important;color:#273553!important}.chat[data-theme="realmadrid"] .msg-row.mine .bubble{background:linear-gradient(115deg,#fff,#d9bc74)!important;color:#203252!important}.chat[data-theme="white"] .msg-row:not(.mine) .bubble{background:#edf0f4!important;color:#263044!important}.chat[data-theme="white"] .msg-row.mine .bubble{background:#fff!important;color:#293246!important;border:1px solid #e1e5eb}.chat[data-theme="gradient"] .msg-row.mine .bubble{background:linear-gradient(115deg,#e843b5,#9b4fd2,#2bc4c5)!important}.call-phone-symbol{display:inline-block;font-size:29px;line-height:1;transform:rotate(-45deg)}.call-control.accept .call-phone-symbol{transform:rotate(135deg)}`;
+  const style=document.createElement('style');style.textContent=css;document.head.append(style);
+  isGroupCreator=c=>!!(c&&c.group&&((c.owner&&c.owner===firebaseUser?.uid)||(!c.owner&&c.createdBy&&c.createdBy===currentUserKey())));
+  const actions=document.querySelector('#groupSettingsModal .modal-actions');
+  if(actions&&!document.getElementById('deleteGroupButton')){const button=document.createElement('button');button.id='deleteGroupButton';button.type='button';button.className='group-delete';button.textContent='Csoport törlése';button.onclick=async()=>{const c=chats.find(x=>x.id===current);if(!c||!isGroupCreator(c))return;if(!confirm('Biztosan törlöd a „'+c.name+'” csoportot? Ez minden tagnál eltűnik.'))return;try{await window.chatFirebase.deleteGroup(c.id);chats=chats.filter(x=>x.id!==c.id);current=null;persist();closeGroupSettings();renderMessages();renderList();showChats();toast('A csoport törölve')}catch(e){toast(e.message||'A csoport törlése sikertelen')}};actions.prepend(button)}
+})();
