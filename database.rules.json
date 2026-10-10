@@ -54,7 +54,7 @@
         ".read": "auth != null && auth.token.email_verified === true && auth.uid === $sender",
         "$target": {
           ".read": "auth != null && auth.token.email_verified === true && (auth.uid === $sender || auth.uid === $target)",
-          ".write": "auth != null && auth.token.email_verified === true && auth.uid === $sender"
+          ".write": "auth != null && auth.token.email_verified === true && (auth.uid === $sender || (auth.uid === $target && data.exists() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'accepted' || newData.child('status').val() === 'declined')))"
         }
       }
     },
@@ -62,7 +62,7 @@
       "$uid": {
         ".read": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
         "$other": {
-          ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid && (root.child('friendRequests').child($uid).child($other).child('status').val() === 'accepted' || root.child('friendRequests').child($other).child($uid).child('status').val() === 'accepted')"
+          ".write": "auth != null && auth.token.email_verified === true && (auth.uid === $uid || auth.uid === $other) && (root.child('friendRequests').child($uid).child($other).child('status').val() === 'accepted' || root.child('friendRequests').child($other).child($uid).child('status').val() === 'accepted')"
         }
       }
     },
@@ -84,7 +84,7 @@
     "conversations": {
       "$id": {
         ".read": "auth != null && auth.token.email_verified === true && data.child('members').child(auth.uid).val() === true",
-        ".write": "auth != null && auth.token.email_verified === true && !data.exists() && newData.child('owner').val() === auth.uid && ((newData.child('type').val() === 'group' && newData.child('members').child(auth.uid).val() === true) || (newData.child('type').val() === 'private' && newData.child('peerUid').val() !== auth.uid && newData.child('members').child(auth.uid).val() === true && newData.child('members').child(newData.child('peerUid').val()).val() === true && (root.child('friendRequests').child(auth.uid).child(newData.child('peerUid').val()).child('status').val() === 'accepted' || root.child('friendRequests').child(newData.child('peerUid').val()).child(auth.uid).child('status').val() === 'accepted')))",
+        ".write": "auth != null && auth.token.email_verified === true && ((!data.exists() && newData.child('owner').val() === auth.uid && ((newData.child('type').val() === 'group' && newData.child('members').child(auth.uid).val() === true) || (newData.child('type').val() === 'private' && newData.child('peerUid').val() !== auth.uid && newData.child('members').child(auth.uid).val() === true && newData.child('members').child(newData.child('peerUid').val()).val() === true && (root.child('friendRequests').child(auth.uid).child(newData.child('peerUid').val()).child('status').val() === 'accepted' || root.child('friendRequests').child(newData.child('peerUid').val()).child(auth.uid).child('status').val() === 'accepted')))) || (data.exists() && !newData.exists() && data.child('type').val() === 'group' && data.child('owner').val() === auth.uid))",
         "members": {
           "$uid": {
             ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid && newData.val() === true && root.child('groupInvitesReceived').child(auth.uid).child($id).child('status').val() === 'accepted'",
