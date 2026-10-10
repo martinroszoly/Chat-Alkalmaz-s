@@ -54,3 +54,7 @@ exports.adminBanProfile=onCall({region:"europe-west1"},async request=>{
   await db.ref("users/"+uid).remove();
   return {ok:true};
 });
+// Mobile and web push delivery; device tokens are stored only through authenticated callables.
+const pushFunctions=require('./push');
+for(const [name,fn]of Object.entries(pushFunctions))if(name!=='_helpers')exports[name]=fn;
+Object.assign(exports,require('./apple-push'));

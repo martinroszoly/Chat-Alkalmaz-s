@@ -127,10 +127,10 @@
         ".read": "auth != null && auth.token.email_verified === true && (data.child('callerUid').val() === auth.uid || data.child('calleeUid').val() === auth.uid)",
         ".write": "auth != null && auth.token.email_verified === true && !data.exists() && newData.child('callerUid').val() === auth.uid && (root.child('friends').child(auth.uid).child(newData.child('calleeUid').val()).val() === true || root.child('friendRequests').child(auth.uid).child(newData.child('calleeUid').val()).child('status').val() === 'accepted' || root.child('friendRequests').child(newData.child('calleeUid').val()).child(auth.uid).child('status').val() === 'accepted')",
         "status": {
-          ".write": "auth != null && auth.token.email_verified === true && (root.child('calls').child($id).child('callerUid').val() === auth.uid || root.child('calls').child($id).child('calleeUid').val() === auth.uid) && (newData.val() === 'ringing' || newData.val() === 'answered' || newData.val() === 'ended' || newData.val() === 'declined')"
+          ".write": "auth != null && auth.token.email_verified === true && ((newData.val() === 'ended' && (data.val() === 'ringing' || data.val() === 'answered') && (root.child('calls').child($id).child('callerUid').val() === auth.uid || root.child('calls').child($id).child('calleeUid').val() === auth.uid)) || ((newData.val() === 'answered' || newData.val() === 'declined') && data.val() === 'ringing' && root.child('calls').child($id).child('calleeUid').val() === auth.uid))"
         },
         "answer": {
-          ".write": "auth != null && auth.token.email_verified === true && root.child('calls').child($id).child('calleeUid').val() === auth.uid"
+          ".write": "auth != null && auth.token.email_verified === true && root.child('calls').child($id).child('calleeUid').val() === auth.uid && root.child('calls').child($id).child('status').val() === 'ringing'"
         },
         "endedAt": {
           ".write": "auth != null && auth.token.email_verified === true && (root.child('calls').child($id).child('callerUid').val() === auth.uid || root.child('calls').child($id).child('calleeUid').val() === auth.uid)"
@@ -141,8 +141,15 @@
               ".write": "auth != null && auth.token.email_verified === true && (($side === 'caller' && root.child('calls').child($id).child('callerUid').val() === auth.uid) || ($side === 'callee' && root.child('calls').child($id).child('calleeUid').val() === auth.uid))"
             }
           }
+        },
+        ".validate": "data.exists() || (newData.hasChildren(['callerUid','calleeUid','conversationId','offer','status','createdAt','expiresAt']) && newData.child('status').val() === 'ringing' && newData.child('createdAt').isNumber() && newData.child('expiresAt').isNumber() && newData.child('expiresAt').val() > now && newData.child('expiresAt').val() <= now + 120000 && root.child('conversations').child(newData.child('conversationId').val()).child('type').val() === 'private' && root.child('conversations').child(newData.child('conversationId').val()).child('members').child(auth.uid).val() === true && root.child('conversations').child(newData.child('conversationId').val()).child('members').child(newData.child('calleeUid').val()).val() === true)",
+        "offer": {
+          ".validate": "newData.hasChildren(['type','sdp']) && newData.child('type').val() === 'offer' && newData.child('sdp').isString() && newData.child('sdp').val().length < 30000"
         }
-      }
+      },
+      ".indexOn": [
+        "status"
+      ]
     },
     "callInbox": {
       "$uid": {
@@ -162,6 +169,18 @@
     "bannedEmails": {
       ".read": "auth != null && auth.token.email_verified === true && auth.token.email === 'martin.roszoly2002@gmail.com'",
       ".write": "auth != null && auth.token.email_verified === true && auth.token.email === 'martin.roszoly2002@gmail.com'"
+    },
+    "pushDevices": {
+      ".read": false,
+      ".write": false
+    },
+    "pushTokenOwners": {
+      ".read": false,
+      ".write": false
+    },
+    "serverConfig": {
+      ".read": false,
+      ".write": false
     }
   }
 }
