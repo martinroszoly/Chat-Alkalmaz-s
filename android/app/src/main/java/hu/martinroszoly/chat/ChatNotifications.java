@@ -16,7 +16,7 @@ public class ChatNotifications {
     static int id(String key){return key.hashCode()&0x7fffffff;}
     static void channels(Context c){
         NotificationManager nm=c.getSystemService(NotificationManager.class);
-        NotificationChannel messages=new NotificationChannel(MESSAGES,"Üzenetek",NotificationManager.IMPORTANCE_HIGH);messages.enableVibration(true);messages.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build());nm.createNotificationChannel(messages);
+        NotificationChannel messages=new NotificationChannel(MESSAGES,"Pulse üzenetek",NotificationManager.IMPORTANCE_HIGH);messages.enableVibration(true);messages.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build());nm.createNotificationChannel(messages);
         NotificationChannel calls=new NotificationChannel(CALLS,"Bejövő hívások",NotificationManager.IMPORTANCE_HIGH);calls.enableVibration(true);calls.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE),new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE).build());nm.createNotificationChannel(calls);
         nm.createNotificationChannel(new NotificationChannel(ACTIVE,"Folyamatban lévő hívás",NotificationManager.IMPORTANCE_LOW));
     }

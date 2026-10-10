@@ -113,7 +113,7 @@ final class ChatPhoneManager: NSObject, PKPushRegistryDelegate, CXProviderDelega
     var timers: [UUID:Timer]=[:]
     var pendingAction: [String:Any]?
     var idToken:String?
-    override init(){let c=CXProviderConfiguration(localizedName:"Üzenetek");c.supportsVideo=false;c.maximumCallsPerCallGroup=1;c.supportedHandleTypes=[.generic];provider=CXProvider(configuration:c);super.init();provider.setDelegate(self,queue:.main)}
+    override init(){let c=CXProviderConfiguration(localizedName:"Pulse");c.supportsVideo=false;c.maximumCallsPerCallGroup=1;c.supportedHandleTypes=[.generic];provider=CXProvider(configuration:c);super.init();provider.setDelegate(self,queue:.main)}
     func configure(){UNUserNotificationCenter.current().delegate=self;registry=PKPushRegistry(queue:.main);registry?.delegate=self;registry?.desiredPushTypes=[.voIP]}
     func didRegister(token:Data){UserDefaults.standard.set(token.map{String(format:"%02x",$0)}.joined(),forKey:"apnsToken");emitTokens()}
     func emitTokens(){var data:[String:Any]=["platform":"ios"];if let t=UserDefaults.standard.string(forKey:"apnsToken"){data["token"]=t};if let t=UserDefaults.standard.string(forKey:"voipToken"){data["voipToken"]=t};if data.count>1{plugin?.emit("pushToken",data)}}

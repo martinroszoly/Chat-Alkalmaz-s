@@ -22,5 +22,5 @@ firebase.initializeApp({apiKey:'AIzaSyAX1n-46JJ6a3XnQwd_d0QaDoQbV1QnSYc',project
 firebase.messaging().onBackgroundMessage(payload=>{
   const d=payload.data||{};if(d.type==='call'&&Number(d.expiresAt)<Date.now())return;
   if(d.type==='call-ended')return self.registration.getNotifications({tag:'call-'+d.callId}).then(items=>items.forEach(n=>n.close()));
-  return self.registration.showNotification(d.title||'Üzenetek',{body:(d.isGroup==='true'?d.senderName+'\n':'')+(d.body||'Új üzenet'),icon:d.avatarUrl||'./icons/icon-192.png',badge:'./icons/badge.png',tag:d.tag,requireInteraction:d.type==='call',vibrate:d.type==='call'?[300,100,300,100,300]:[120],data:{chatId:d.chatId,callId:d.callId,url:d.type==='call'?'./?call='+encodeURIComponent(d.callId):'./?chat='+encodeURIComponent(d.chatId)}});
+  return self.registration.showNotification(d.title||'Pulse',{body:(d.isGroup==='true'?d.senderName+'\n':'')+(d.body||'Új üzenet'),icon:d.avatarUrl||'./icons/icon-192.png',badge:'./icons/badge.png',tag:d.tag,requireInteraction:d.type==='call',vibrate:d.type==='call'?[300,100,300,100,300]:[120],data:{chatId:d.chatId,callId:d.callId,url:d.type==='call'?'./?call='+encodeURIComponent(d.callId):'./?chat='+encodeURIComponent(d.chatId)}});
 });

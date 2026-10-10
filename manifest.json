@@ -1,15 +1,15 @@
 {
   "id": "./",
-  "name": "Üzenetek – Chat",
-  "short_name": "Üzenetek",
-  "description": "Privát és csoportos beszélgetések",
+  "name": "Pulse",
+  "short_name": "Pulse",
+  "description": "Pulse – privát és csoportos beszélgetések, hívások",
   "lang": "hu",
   "start_url": "./?source=installed-app",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#101b2b",
-  "theme_color": "#14243a",
+  "background_color": "#071d29",
+  "theme_color": "#0a2634",
   "icons": [
     {
       "src": "./icons/icon-192.png",
