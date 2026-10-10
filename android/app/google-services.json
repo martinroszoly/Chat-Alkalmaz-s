@@ -1,0 +1,18 @@
+{
+  "project_info": {
+    "project_number": "855477495883",
+    "firebase_url": "https://chat-alkalmazas-578c8-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "chat-alkalmazas-578c8",
+    "storage_bucket": "chat-alkalmazas-578c8.firebasestorage.app"
+  },
+  "client": [{
+    "client_info": {
+      "mobilesdk_app_id": "1:855477495883:android:11aa26da3cf966250c05ce",
+      "android_client_info": { "package_name": "hu.martinroszoly.chat" }
+    },
+    "oauth_client": [],
+    "api_key": [{ "current_key": "AIzaSyAX1n-46JJ6a3XnQwd_d0QaDoQbV1QnSYc" }],
+    "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+  }],
+  "configuration_version": "1"
+}
