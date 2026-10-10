@@ -1,0 +1,5 @@
+name = "pulse-free-push"
+main = "src/worker.js"
+compatibility_date = "2026-10-10"
+
+# A FIREBASE_SERVICE_ACCOUNT secretet a Cloudflare kezeli, nem kerül a GitHubba.
