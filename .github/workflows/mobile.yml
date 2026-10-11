@@ -37,8 +37,10 @@ jobs:
         run: |
           if [ -n "$GOOGLE_SERVICES_JSON" ]; then
             printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          elif [ -s android/app/google-services.json ]; then
+            echo 'Using Firebase Android configuration from the repository.'
           else
-            echo '::warning::Firebase native configuration is missing. APK can open chats, but native background push cannot register yet.'
+            echo '::warning::Firebase Android configuration is missing. Native push registration will not work.'
           fi
       - run: chmod +x android/gradlew
       - run: ./gradlew --no-daemon assembleDebug
