@@ -3,7 +3,7 @@ const {JSDOM}=require('jsdom');
 const html=fs.readFileSync('index.html','utf8');
 function fixture(){
  const dom=new JSDOM(html,{url:'https://example.test/Chat-Alkalmaz-s/',runScripts:'outside-only'}),w=dom.window;
- const context=vm.createContext({document:w.document,navigator:{},localStorage:w.localStorage,window:{},console,Image:w.Image,MediaStream:class{},setTimeout,clearTimeout,setInterval,clearInterval,Date,chats:[{id:'one',remote:true,peerUid:'peer',name:'Anna',messages:[]}],current:'one',activePhoneCall:null,pendingPhoneCall:null,firebaseUser:{uid:'me'},toast:()=>{}});
+ const context=vm.createContext({document:w.document,navigator:{},localStorage:w.localStorage,window:{},console,Image:w.Image,MediaStream:class{},setTimeout,clearTimeout,setInterval,clearInterval,Date,chats:[{id:'one',remote:true,peerUid:'peer',name:'Anna',messages:[]}],current:'one',activePhoneCall:null,pendingPhoneCall:null,firebaseUser:{uid:'me'},markChatRead:()=>{},toast:()=>{}});
  return{context,w,dom};
 }
 test('inline scripts parse; no conflicting iOS storyboard module',async()=>{
