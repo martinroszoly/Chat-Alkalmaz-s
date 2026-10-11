@@ -27,8 +27,9 @@ function serviceToken_() { return ScriptApp.getOAuthToken(); }
 function database_(path,token){const response=UrlFetchApp.fetch(DATABASE_URL+'/'+path+'.json',{headers:{Authorization:'Bearer '+token},muteHttpExceptions:true});if(response.getResponseCode()!==200)throw new Error('Adatbázis hiba');return JSON.parse(response.getContentText())}
 function writeDatabase_(path,value,token,method){const response=UrlFetchApp.fetch(DATABASE_URL+'/'+path+'.json',{method:method||'put',contentType:'application/json',headers:{Authorization:'Bearer '+token},payload:value===null?'null':JSON.stringify(value),muteHttpExceptions:true});if(response.getResponseCode()>=300)throw new Error('Az értesítési eszköz mentése nem sikerült')}
 function compact_(value,max){return String(value||'').slice(0,max||1000)}
-function send_(deviceToken,data,token){const response=UrlFetchApp.fetch('https://fcm.googleapis.com/v1/projects/'+PROJECT_ID+'/messages:send',{method:'post',contentType:'application/json',headers:{Authorization:'Bearer '+token},payload:JSON.stringify({message:{token:deviceToken,data:data,android:{priority:'high',ttl:data.type==='call'?'60s':'86400s'}}}),muteHttpExceptions:true});const text=response.getContentText();if(response.getResponseCode()>=300&&!/UNREGISTERED|INVALID_ARGUMENT/.test(text))throw new Error('FCM küldési hiba')}
-function devices_(uid,token){return Object.values(database_('pushDevices/'+encodeURIComponent(uid),token)||{}).filter(d=>d.platform==='android'&&typeof d.token==='string')}
+function send_(uid,device,data,token){const response=UrlFetchApp.fetch('https://fcm.googleapis.com/v1/projects/'+PROJECT_ID+'/messages:send',{method:'post',contentType:'application/json',headers:{Authorization:'Bearer '+token},payload:JSON.stringify({message:{token:device.token,data:data,android:{priority:'high',ttl:(data.type==='call'||data.type==='call-ended')?'60s':'86400s'}}}),muteHttpExceptions:true});const text=response.getContentText();if(response.getResponseCode()>=300){if(/UNREGISTERED/.test(text)){writeDatabase_('pushDevices/'+encodeURIComponent(uid)+'/'+encodeURIComponent(device.id),null,token,'delete');return}throw new Error('FCM küldési hiba: '+text.slice(0,500))}}
+function devices_(uid,token){return Object.entries(database_('pushDevices/'+encodeURIComponent(uid),token)||{}).filter(([,d])=>d.platform==='android'&&typeof d.token==='string').map(([id,d])=>({id,token:d.token}))}
+function profile_(uid,token){return database_('publicProfiles/'+encodeURIComponent(uid),token)||{}}
 function notify_(event,uid){
   const token=serviceToken_();
   if(event.kind==='register'){
@@ -39,15 +40,21 @@ function notify_(event,uid){
     if(typeof event.deviceId!=='string'||event.deviceId.length<8)throw new Error('Érvénytelen értesítési eszköz');
     writeDatabase_('pushDevices/'+encodeURIComponent(uid)+'/'+encodeURIComponent(event.deviceId),null,token,'delete');return;
   }
-  const avatarData=typeof event.avatarData==='string'&&event.avatarData.indexOf('data:image/')===0&&event.avatarData.length<3500?event.avatarData:'';
+  const avatarData=typeof event.avatarData==='string'&&event.avatarData.indexOf('data:image/')===0&&event.avatarData.length<1200?event.avatarData:'';
   if(event.kind==='message'){
-    const chat=database_('conversations/'+encodeURIComponent(event.chatId),token),message=chat&&chat.messages&&chat.messages[event.messageId];if(!chat||!message||message.senderUid!==uid)throw new Error('Az üzenet nem küldhető');
-    const group=chat.type==='group',data={type:'message',chatId:compact_(event.chatId),title:group?compact_(chat.name||'Csoport',80):compact_(message.senderName||'Új üzenet',80),body:compact_(message.text||'Fényképet küldött'),senderName:compact_(message.senderName||'Felhasználó',80),isGroup:String(group),groupName:group?compact_(chat.name||'Csoport',80):'',tag:'message-'+compact_(event.messageId),avatarData:avatarData};
-    Object.keys(chat.members||{}).filter(id=>chat.members[id]===true&&id!==uid).forEach(id=>devices_(id,token).forEach(d=>send_(d.token,data,token)));return;
+    const chat=database_('conversations/'+encodeURIComponent(event.chatId),token),message=chat&&chat.messages&&chat.messages[event.messageId];if(!chat||chat.members?.[uid]!==true||!message||message.senderUid!==uid)throw new Error('Az üzenet nem küldhető');
+    const profile=profile_(uid,token),senderName=compact_(profile.username||message.senderName||'Felhasználó',80),group=chat.type==='group',data={type:'message',chatId:compact_(event.chatId,180),title:group?compact_(chat.name||'Csoport',80):senderName,body:compact_(message.text||'Fényképet küldött',350),senderName:senderName,isGroup:String(group),groupName:group?compact_(chat.name||'Csoport',80):'',tag:'message-'+compact_(event.messageId,180),avatarData:avatarData};
+    Object.keys(chat.members||{}).filter(id=>chat.members[id]===true&&id!==uid).forEach(id=>devices_(id,token).forEach(d=>send_(id,d,data,token)));return;
+  }
+  if(event.kind==='call-ended'){
+    const call=database_('calls/'+encodeURIComponent(event.callId),token);
+    if(!call||![call.callerUid,call.calleeUid].includes(uid)||!['ended','declined'].includes(call.status))throw new Error('A hívás lezárása nem küldhető');
+    const data={type:'call-ended',callId:compact_(event.callId,180)};
+    [call.callerUid,call.calleeUid].forEach(target=>devices_(target,token).forEach(d=>send_(target,d,data,token)));return;
   }
   if(event.kind==='call'){
     const call=database_('calls/'+encodeURIComponent(event.callId),token);if(!call||call.callerUid!==uid||call.status!=='ringing'||call.expiresAt<Date.now())throw new Error('A hívás nem küldhető');
-    const data={type:'call',callId:compact_(event.callId),chatId:compact_(call.conversationId),title:compact_(call.callerName||'Ismerős',80)+' hív',body:'Bejövő hívás · Koppints a fogadáshoz',tag:'call-'+compact_(event.callId),expiresAt:String(call.expiresAt),avatarData:avatarData};devices_(call.calleeUid,token).forEach(d=>send_(d.token,data,token));return;
+    const profile=profile_(uid,token),data={type:'call',callId:compact_(event.callId,180),chatId:compact_(call.conversationId,180),title:compact_(profile.username||call.callerName||'Ismerős',80)+' hív',body:'Bejövő hívás · Koppints a fogadáshoz',tag:'call-'+compact_(event.callId,180),expiresAt:String(call.expiresAt),avatarData:avatarData};devices_(call.calleeUid,token).forEach(d=>send_(call.calleeUid,d,data,token));return;
   }
   throw new Error('Ismeretlen értesítéstípus');
 }

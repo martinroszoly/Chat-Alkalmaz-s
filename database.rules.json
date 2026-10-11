@@ -84,11 +84,11 @@
     "conversations": {
       "$id": {
         ".read": "auth != null && auth.token.email_verified === true && data.child('members').child(auth.uid).val() === true",
-        ".write": "auth != null && auth.token.email_verified === true && ((!data.exists() && newData.child('owner').val() === auth.uid && ((newData.child('type').val() === 'group' && newData.child('members').child(auth.uid).val() === true) || (newData.child('type').val() === 'private' && newData.child('peerUid').val() !== auth.uid && newData.child('members').child(auth.uid).val() === true && newData.child('members').child(newData.child('peerUid').val()).val() === true && (root.child('friendRequests').child(auth.uid).child(newData.child('peerUid').val()).child('status').val() === 'accepted' || root.child('friendRequests').child(newData.child('peerUid').val()).child(auth.uid).child('status').val() === 'accepted')))) || (data.exists() && !newData.exists() && data.child('type').val() === 'group' && data.child('owner').val() === auth.uid))",
+        ".write": "auth != null && auth.token.email_verified === true && ((!data.exists() && newData.child('owner').val() === auth.uid && ((newData.child('type').val() === 'group' && newData.child('members').child(auth.uid).val() === true) || (newData.child('type').val() === 'private' && newData.child('peerUid').val() !== auth.uid && newData.child('members').child(auth.uid).val() === true && newData.child('members').child(newData.child('peerUid').val()).val() === true && root.child('publicProfiles').child(newData.child('peerUid').val()).exists()))) || (data.exists() && !newData.exists() && data.child('type').val() === 'group' && data.child('owner').val() === auth.uid))",
         "members": {
           "$uid": {
             ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid && newData.val() === true && root.child('groupInvitesReceived').child(auth.uid).child($id).child('status').val() === 'accepted'",
-            ".validate": "newData.val() === true && ((newData.parent().parent().child('type').val() === 'group' && (($uid === auth.uid && newData.parent().parent().child('owner').val() === auth.uid) || root.child('groupInvitesReceived').child($uid).child($id).child('status').val() === 'accepted')) || (newData.parent().parent().child('type').val() === 'private' && ($uid === auth.uid || $uid === newData.parent().parent().child('peerUid').val()) && (root.child('friendRequests').child(auth.uid).child(newData.parent().parent().child('peerUid').val()).child('status').val() === 'accepted' || root.child('friendRequests').child(newData.parent().parent().child('peerUid').val()).child(auth.uid).child('status').val() === 'accepted')))"
+            ".validate": "newData.val() === true && ((newData.parent().parent().child('type').val() === 'group' && (($uid === auth.uid && newData.parent().parent().child('owner').val() === auth.uid) || root.child('groupInvitesReceived').child($uid).child($id).child('status').val() === 'accepted')) || (newData.parent().parent().child('type').val() === 'private' && ($uid === auth.uid || $uid === newData.parent().parent().child('peerUid').val()) && newData.parent().parent().child('owner').val() === auth.uid && root.child('publicProfiles').child(newData.parent().parent().child('peerUid').val()).exists()))"
           }
         },
         "name": {
@@ -109,7 +109,19 @@
                 ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid && root.child('conversations').child($id).child('members').child(auth.uid).val() === true && ((!newData.exists()) || newData.val() === true)",
                 ".validate": "newData.val() === true"
               }
+            },
+            "readBy": {
+              "$uid": {
+                ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid && root.child('conversations').child($id).child('members').child(auth.uid).val() === true && newData.val() === true",
+                ".validate": "newData.val() === true"
+              }
             }
+          }
+        },
+        "readAt": {
+          "$uid": {
+            ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid && root.child('conversations').child($id).child('members').child(auth.uid).val() === true",
+            ".validate": "newData.isNumber() && (!data.exists() || newData.val() >= data.val())"
           }
         }
       }

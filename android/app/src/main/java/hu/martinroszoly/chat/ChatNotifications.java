@@ -12,7 +12,7 @@ import androidx.core.graphics.drawable.IconCompat;
 import java.util.Map;
 
 public class ChatNotifications {
-    static final String MESSAGES="chat_messages_v1",CALLS="chat_calls_v1",ACTIVE="chat_active_calls_v1";
+    static final String MESSAGES="chat_messages_v1",CALLS="chat_calls_v2",ACTIVE="chat_active_calls_v1";
     static int id(String key){return key.hashCode()&0x7fffffff;}
     static void channels(Context c){
         NotificationManager nm=c.getSystemService(NotificationManager.class);
