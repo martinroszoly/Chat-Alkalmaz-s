@@ -43,7 +43,7 @@ function notify_(event,uid){
   const avatarData=typeof event.avatarData==='string'&&event.avatarData.indexOf('data:image/')===0&&event.avatarData.length<1200?event.avatarData:'';
   if(event.kind==='message'){
     const chat=database_('conversations/'+encodeURIComponent(event.chatId),token),message=chat&&chat.messages&&chat.messages[event.messageId];if(!chat||chat.members?.[uid]!==true||!message||message.senderUid!==uid)throw new Error('Az üzenet nem küldhető');
-    const profile=profile_(uid,token),senderName=compact_(profile.username||message.senderName||'Felhasználó',80),group=chat.type==='group',data={type:'message',chatId:compact_(event.chatId,180),title:group?compact_(chat.name||'Csoport',80):senderName,body:compact_(message.text||'Fényképet küldött',350),senderName:senderName,isGroup:String(group),groupName:group?compact_(chat.name||'Csoport',80):'',tag:'message-'+compact_(event.messageId,180),avatarData:avatarData};
+    const profile=profile_(uid,token),senderName=compact_(profile.username||message.senderName||'Felhasználó',80),group=chat.type==='group',data={type:'message',chatId:compact_(event.chatId,180),title:group?compact_(chat.name||'Csoport',80):senderName,body:compact_(message.text||'Fényképet küldött',350),senderName:senderName,isGroup:String(group),groupName:group?compact_(chat.name||'Csoport',80):'',tag:'pulse-messages',avatarData:avatarData};
     Object.keys(chat.members||{}).filter(id=>chat.members[id]===true&&id!==uid).forEach(id=>devices_(id,token).forEach(d=>send_(id,d,data,token)));return;
   }
   if(event.kind==='call-ended'){

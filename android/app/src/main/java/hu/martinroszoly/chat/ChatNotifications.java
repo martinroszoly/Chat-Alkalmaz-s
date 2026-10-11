@@ -35,7 +35,7 @@ public class ChatNotifications {
         PendingIntent open=route(c,d.get("chatId"),null,"open");
         NotificationCompat.Builder b=new NotificationCompat.Builder(c,MESSAGES).setSmallIcon(R.drawable.ic_notification).setContentTitle(d.get("title")).setContentText(d.get("body")).setStyle(style).setContentIntent(open).setAutoCancel(true).setCategory(NotificationCompat.CATEGORY_MESSAGE).setPriority(NotificationCompat.PRIORITY_HIGH).addAction(0,"Chat megnyitása",open);
         if(avatar!=null)b.setLargeIcon(avatar);
-        c.getSystemService(NotificationManager.class).notify(id(d.getOrDefault("tag",d.get("chatId"))),b.build());
+        c.getSystemService(NotificationManager.class).notify(id(d.getOrDefault("tag","pulse-messages")),b.build());
     }
     static void incoming(Context c,String call,String name,long expiry,Bitmap avatar){
         if(expiry<=System.currentTimeMillis())return;channels(c);Person.Builder p=new Person.Builder().setName(name).setImportant(true);if(avatar!=null)p.setIcon(IconCompat.createWithBitmap(avatar));
