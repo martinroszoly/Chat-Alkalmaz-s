@@ -67,8 +67,10 @@
     if(window.ChatNative?.platform==='ios')await window.ChatNative.phone.setSession({idToken:await user.getIdToken()}).catch(console.warn);
     if(window.ChatNative?.isNative)await window.ChatNative.phone.getPendingAction().then(openRoute).catch(console.warn);
     if(pendingRoute)await openRoute(pendingRoute);else await openRoute(routeFromUrl());
-    if(localStorage.getItem('messageNotifications')==='true'){
-      try{if(window.ChatNative?.isNative)await window.ChatNative.phone.registerPush();else if(Notification.permission==='granted')await registerWeb();}catch(e){console.warn('Push registration pending',e);}
+    if(window.ChatNative?.isNative){
+      try{await window.ChatNative.phone.registerPush();localStorage.setItem('messageNotifications','true');updateNotificationSetting();}catch(e){console.warn('Push registration pending',e);}
+    }else if(localStorage.getItem('messageNotifications')==='true'){
+      try{if(Notification.permission==='granted')await registerWeb();}catch(e){console.warn('Push registration pending',e);}
     }
   }
   async function beforeSignOut(){
