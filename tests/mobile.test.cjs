@@ -87,3 +87,18 @@ test('accepted requests create friends for both users and repair missing friend 
  const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;
  assert(rules.friendRequests.$target.$sender['.write'].includes("data.child('status').val() === 'pending' && newData.child('status').val() === 'pending'"));
 });
+test('accepting a request atomically repairs both users friend rows',async()=>{
+ const start=html.indexOf('const updateFriendRequest=async');
+ const end=html.indexOf(';\nconst localReadAt',start);
+ const values={
+  'friendRequests/recipient/sender':{senderUid:'sender',targetUid:'recipient',status:'pending',createdAt:1},
+  'sentRequests/sender/recipient':{senderUid:'sender',targetUid:'recipient',status:'pending',createdAt:1}
+ };
+ const {context,dom}=fixture();context.auth={currentUser:{uid:'recipient',emailVerified:true}};context.db={};context.ref=(_db,path)=>path;context.get=async path=>({val:()=>values[path]??null});context.set=async(path,value)=>{values[path]=value};
+ await vm.runInContext(`${html.slice(start,end)}; updateFriendRequest('sender','accepted')`,context);
+ assert.equal(values['friendRequests/recipient/sender'].status,'accepted');
+ assert.equal(values['sentRequests/sender/recipient'].status,'accepted');
+ assert.equal(values['friends/recipient/sender'],true);
+ assert.equal(values['friends/sender/recipient'],true);
+ dom.window.close();
+});
