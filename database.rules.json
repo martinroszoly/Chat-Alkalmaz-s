@@ -43,7 +43,7 @@
       "$target": {
         "$sender": {
           ".read": "auth != null && auth.token.email_verified === true && (auth.uid === $target || auth.uid === $sender)",
-          ".write": "auth != null && auth.token.email_verified === true && ((auth.uid === $sender && ((!data.exists() && root.child('publicProfiles').child($target).exists() && newData.child('status').val() === 'pending') || (data.exists() && newData.child('status').val() === 'cancelled') || (data.exists() && (data.child('status').val() === 'cancelled' || data.child('status').val() === 'declined') && newData.child('status').val() === 'pending'))) || (auth.uid === $target && data.exists() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'accepted' || newData.child('status').val() === 'declined')))",
+          ".write": "auth != null && auth.token.email_verified === true && ((auth.uid === $sender && ((!data.exists() && root.child('publicProfiles').child($target).exists() && newData.child('status').val() === 'pending') || (data.exists() && newData.child('status').val() === 'cancelled') || (data.exists() && data.child('status').val() === 'pending' && newData.child('status').val() === 'pending') || (data.exists() && (data.child('status').val() === 'cancelled' || data.child('status').val() === 'declined') && newData.child('status').val() === 'pending'))) || (auth.uid === $target && data.exists() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'accepted' || newData.child('status').val() === 'declined')))",
           ".validate": "newData.hasChildren(['senderUid','status']) && newData.child('senderUid').val() === $sender"
         },
         ".read": "auth != null && auth.token.email_verified === true && auth.uid === $target"
@@ -184,7 +184,14 @@
     },
     "pushDevices": {
       ".read": false,
-      ".write": false
+      ".write": false,
+      "$uid": {
+        ".read": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
+        "$deviceId": {
+          ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['platform','token','updatedAt']) && newData.child('platform').isString() && (newData.child('platform').val() === 'android' || newData.child('platform').val() === 'ios' || newData.child('platform').val() === 'web') && newData.child('token').isString() && newData.child('token').val().length >= 20 && newData.child('token').val().length <= 4096 && newData.child('updatedAt').isNumber()"
+        }
+      }
     },
     "pushTokenOwners": {
       ".read": false,
