@@ -29,7 +29,7 @@ public class ChatPhonePlugin extends Plugin {
     private void registerToken(PluginCall call){
         try{FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task->{
             if(!task.isSuccessful()){call.reject("Firebase értesítésregisztráció sikertelen",task.getException());return;}
-            JSObject token=new JSObject();token.put("token",task.getResult());token.put("platform","android");notifyListeners("pushToken",token,true);call.resolve();
+            JSObject token=new JSObject();token.put("token",task.getResult());token.put("platform","android");notifyListeners("pushToken",token,true);call.resolve(token);
         });}catch(Exception e){call.reject("A Firebase Android konfiguráció hiányzik",e);}
     }
     @PluginMethod public void getPendingAction(PluginCall call){JSObject data=route(getActivity().getIntent());getActivity().getIntent().removeExtra("chatId");getActivity().getIntent().removeExtra("callId");getActivity().getIntent().removeExtra("action");call.resolve(data);}
