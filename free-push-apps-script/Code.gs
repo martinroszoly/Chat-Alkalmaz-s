@@ -11,7 +11,7 @@ function doPost(event) {
     return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
     console.error(error);
-    return ContentService.createTextOutput(JSON.stringify({ok:false})).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ok:false,error:String(error && error.message || error).slice(0,240)})).setMimeType(ContentService.MimeType.JSON);
   }
 }
 

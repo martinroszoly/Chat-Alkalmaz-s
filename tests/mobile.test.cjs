@@ -49,3 +49,30 @@ test('profile login sync preserves gallery, and push tokens can only be written 
  assert(html.includes('publishPublicProfile(user,{...data,username,avatar})'));
  const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;assert.equal(rules.pushDevices['.read'],false);assert.equal(rules.pushDevices['.write'],false);assert.equal(rules.serverConfig['.read'],false);
 });
+test('opening a read chat does not create an endless read receipt loop',()=>{
+ const start=html.lastIndexOf("markChatRead=function(chat)");
+ const end=html.indexOf(';\nconst pulseRenderMessages',start);
+ const source=html.slice(start,end);
+ assert(start>0);assert(source.includes("if(!unseen.length)return"));
+ assert(source.indexOf("if(!unseen.length)return")<source.indexOf('markConversationRead(chat.id,unseen)'));
+});
+test('read receipts are sent as one atomic database update',()=>{
+ const start=html.indexOf('const markConversationRead=async');
+ const end=html.indexOf(';const setRemoteLike',start);
+ const source=html.slice(start,end);
+ assert(source.includes("if(!ids.length)return false"));
+ assert(source.includes('await update(ref(db),updates)'));
+ assert(!source.includes('Promise.allSettled'));
+});
+test('chat photos are constrained on mobile and scroll position is anchored',()=>{
+ assert(html.includes('max-width:min(60vw,240px)'));
+ assert(html.includes("const pulseRenderMessages=renderMessages"));
+ assert(html.includes("anchorIndex=rows.findIndex"));
+});
+test('friend acceptance writes friendship before the optional sent-request cleanup',()=>{
+ const start=html.indexOf('const updateFriendRequest=async');
+ const end=html.indexOf(';\nconst localReadAt',start);
+ const source=html.slice(start,end);
+ assert(source.indexOf('friends/')<source.lastIndexOf('sentPath'));
+ assert(source.includes('await set(ref(db,sentPath),stamp).catch(console.warn)'));
+});

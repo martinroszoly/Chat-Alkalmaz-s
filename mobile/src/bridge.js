@@ -1,6 +1,6 @@
-import {Capacitor,registerPlugin} from '@capacitor/core';
+import {Capacitor,CapacitorHttp,registerPlugin} from '@capacitor/core';
 const phone=registerPlugin('ChatPhone');
-window.ChatNative={isNative:Capacitor.isNativePlatform(),platform:Capacitor.getPlatform(),phone};
+window.ChatNative={isNative:Capacitor.isNativePlatform(),platform:Capacitor.getPlatform(),phone,http:CapacitorHttp};
 if(Capacitor.isNativePlatform()){
   phone.addListener('pushToken',data=>window.dispatchEvent(new CustomEvent('chat:native-token',{detail:data})));
   phone.addListener('notificationAction',data=>window.dispatchEvent(new CustomEvent('chat:native-route',{detail:data})));
