@@ -36,7 +36,7 @@
   async function enableNotifications(){
     try{
       if(!firebaseUser?.emailVerified)throw new Error('Az értesítésekhez jelentkezz be');
-      if(window.ChatNative?.isNative)await window.ChatNative.phone.registerPush();
+      if(window.ChatNative?.isNative){const token=await window.ChatNative.phone.registerPush();if(token?.token)await saveNativeToken(token);}
       else{
         if(!('Notification'in window))throw new Error('Ezen a böngészőn nem támogatott az értesítés');
         if(await Notification.requestPermission()!=='granted')throw new Error('Engedélyezd az értesítéseket a telefon beállításaiban');
@@ -68,7 +68,7 @@
     if(window.ChatNative?.isNative)await window.ChatNative.phone.getPendingAction().then(openRoute).catch(console.warn);
     if(pendingRoute)await openRoute(pendingRoute);else await openRoute(routeFromUrl());
     if(window.ChatNative?.isNative){
-      try{await window.ChatNative.phone.registerPush();localStorage.setItem('messageNotifications','true');updateNotificationSetting();}catch(e){console.warn('Push registration pending',e);}
+      try{const token=await window.ChatNative.phone.registerPush();if(token?.token)await saveNativeToken(token);localStorage.setItem('messageNotifications','true');updateNotificationSetting();}catch(e){console.warn('Push registration pending',e);}
     }else if(localStorage.getItem('messageNotifications')==='true'){
       try{if(Notification.permission==='granted')await registerWeb();}catch(e){console.warn('Push registration pending',e);}
     }
