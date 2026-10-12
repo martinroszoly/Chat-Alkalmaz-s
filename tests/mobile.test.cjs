@@ -66,6 +66,7 @@ test('read receipts are sent as one atomic database update',()=>{
 });
 test('chat photos are constrained on mobile and scroll position is anchored',()=>{
  assert(html.includes('max-width:min(60vw,240px)'));
+ assert(fs.readFileSync('calls.js','utf8').includes('max-width:min(60vw,240px)'));
  assert(html.includes("const pulseRenderMessages=renderMessages"));
  assert(html.includes("anchorIndex=rows.findIndex"));
 });
