@@ -47,7 +47,7 @@ test('service worker focuses an existing app and sends the exact route',async()=
 });
 test('profile login sync preserves gallery, and push tokens can only be written by their owner',()=>{
  assert(html.includes('publishPublicProfile(user,{...data,username,avatar})'));
- const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;assert.equal(rules.pushDevices['.read'],false);assert.equal(rules.pushDevices['.write'],false);assert.equal(rules.serverConfig['.read'],false);
+ const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;assert.equal(rules.pushDevices['.read'],false);assert.equal(rules.pushDevices['.write'],false);assert(rules.pushDevices.$uid['.read'].includes('auth.uid === $uid'));assert(rules.pushDevices.$uid.$deviceId['.write'].includes('auth.uid === $uid'));assert(rules.pushDevices.$uid.$deviceId['.validate'].includes("'android'"));assert.equal(rules.serverConfig['.read'],false);const registration=html.slice(html.indexOf('registerPushDevice:'),html.indexOf('unregisterPushDevice:'));assert(registration.includes('pushDevices/"+u.uid+"/"+id'));assert(!registration.includes('sendFreePush'));
 });
 test('opening a read chat does not create an endless read receipt loop',()=>{
  const start=html.lastIndexOf("markChatRead=function(chat)");
@@ -70,10 +70,9 @@ test('chat photos are constrained on mobile and scroll position is anchored',()=
  assert(html.includes("const pulseRenderMessages=renderMessages"));
  assert(html.includes("anchorIndex=rows.findIndex"));
 });
-test('friend acceptance writes friendship before the optional sent-request cleanup',()=>{
- const start=html.indexOf('const updateFriendRequest=async');
- const end=html.indexOf(';\nconst localReadAt',start);
- const source=html.slice(start,end);
- assert(source.indexOf('friends/')<source.lastIndexOf('sentPath'));
- assert(source.includes('await set(ref(db,sentPath),stamp).catch(console.warn)'));
+test('accepted requests appear on both users and stale cancellations can be retried',()=>{
+ const start=html.indexOf('const updateFriendRequest=async');const end=html.indexOf(';\\nconst localReadAt',start);const update=html.slice(start,end);assert(update.includes('await set(ref(db,requestPath),stamp);await set(ref(db,sentPath),stamp)'));assert(update.includes('await set(ref(db,"friends/"+u.uid+"/"+other),true)'));
+ const watch=html.slice(html.indexOf('const watchSocial='),html.indexOf(';\\nconst requestFriend='));assert(watch.includes('...Object.entries(requests).filter(([,r])=>r?.status==="accepted")'));assert(watch.includes('...Object.entries(sent).filter(([,r])=>r?.status==="accepted")'));assert(watch.includes('set(ref(db,"friends/"+uid+"/"+id),true)'));
+ const request=html.slice(html.indexOf('const requestFriend='),html.indexOf(';\\nconst updateFriendRequest='));assert(request.includes('await set(requestRef,request);await set(sentRef,request)'));
+ const dbRules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;assert(dbRules.friendRequests.$target.$sender['.write'].includes("data.child('status').val() === 'pending' && newData.child('status').val() === 'pending'"));
 });
