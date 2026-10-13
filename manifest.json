@@ -1,15 +1,15 @@
 {
   "id": "./",
-  "name": "Pulse",
-  "short_name": "Pulse",
-  "description": "Pulse – privát és csoportos beszélgetések, hívások",
+  "name": "Pulze-pro",
+  "short_name": "Pulze-pro",
+  "description": "Pulze-pro – privát és csoportos beszélgetések, hívások",
   "lang": "hu",
   "start_url": "./?source=installed-app",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#071d29",
-  "theme_color": "#0a2634",
+  "background_color": "#080809",
+  "theme_color": "#080809",
   "icons": [
     {
       "src": "./icons/icon-192.png",
@@ -24,7 +24,7 @@
       "purpose": "any"
     },
     {
-      "src": "./icons/icon-512.png",
+      "src": "./icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

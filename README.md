@@ -1,4 +1,4 @@
-# Üzenetek – Android, iPhone és web
+# Pulze-pro – Android, iPhone és web
 
 A nyilvános profil felül középen jeleníti meg a profilképet és a nevet, alatta a kapcsolati és üzenetgombokat, alul középen a galériát. A galéria üres állapotban is megnyitható; idegen profilnál nincs feltöltés vagy törlés. Belépéskor a nyilvános profil fotói megmaradnak.
 

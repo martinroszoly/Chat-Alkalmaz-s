@@ -1,5 +1,5 @@
-const CACHE='uzenetek-shell-v2';
-const SHELL=['./','./manifest.json','./icon.svg','./icons/icon-192.png','./icons/icon-512.png','./calls.js','./notifications.js','./mobile-bridge.js'];
+const CACHE='pulze-pro-shell-v3';
+const SHELL=['./','./manifest.json','./icon.svg','./pulze-theme.css','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png','./icons/apple-touch-icon.png','./calls.js','./notifications.js','./mobile-bridge.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
@@ -22,5 +22,5 @@ firebase.initializeApp({apiKey:'AIzaSyAX1n-46JJ6a3XnQwd_d0QaDoQbV1QnSYc',project
 firebase.messaging().onBackgroundMessage(payload=>{
   const d=payload.data||{};if(d.type==='call'&&Number(d.expiresAt)<Date.now())return;
   if(d.type==='call-ended')return self.registration.getNotifications({tag:'call-'+d.callId}).then(items=>items.forEach(n=>n.close()));
-  return self.registration.showNotification(d.title||'Pulse',{body:(d.isGroup==='true'?d.senderName+'\n':'')+(d.body||'Új üzenet'),icon:d.avatarUrl||'./icons/icon-192.png',badge:'./icons/badge.png',tag:d.tag,requireInteraction:d.type==='call',vibrate:d.type==='call'?[300,100,300,100,300]:[120],data:{chatId:d.chatId,callId:d.callId,url:d.type==='call'?'./?call='+encodeURIComponent(d.callId):'./?chat='+encodeURIComponent(d.chatId)}});
+  return self.registration.showNotification(d.title||'Pulze-pro',{body:(d.isGroup==='true'?d.senderName+'\n':'')+(d.body||'Új üzenet'),icon:d.avatarUrl||'./icons/icon-192.png',badge:'./icons/badge.png',tag:d.tag,requireInteraction:d.type==='call',vibrate:d.type==='call'?[300,100,300,100,300]:[120],data:{chatId:d.chatId,callId:d.callId,url:d.type==='call'?'./?call='+encodeURIComponent(d.callId):'./?chat='+encodeURIComponent(d.chatId)}});
 });
