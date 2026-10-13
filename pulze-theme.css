@@ -252,7 +252,7 @@ body.auth-required .profile-card::before {
   width: 76px;
   height: 76px;
   margin: 0 auto 18px;
-  background: url('./icons/icon-512.png') center / contain no-repeat;
+  background: url('./icons/icon-512.png?v=2') center / contain no-repeat;
 }
 body.auth-required .profile-title,
 body.auth-required .profile-card h1,
