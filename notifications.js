@@ -68,7 +68,7 @@
     if(window.ChatNative?.isNative)await window.ChatNative.phone.getPendingAction().then(openRoute).catch(console.warn);
     if(pendingRoute)await openRoute(pendingRoute);else await openRoute(routeFromUrl());
     if(window.ChatNative?.isNative){
-      try{const token=await window.ChatNative.phone.registerPush();if(token?.token)await saveNativeToken(token);localStorage.setItem('messageNotifications','true');updateNotificationSetting();}catch(e){console.warn('Push registration pending',e);}
+      try{const token=await window.ChatNative.phone.registerPush();if(token?.token)await saveNativeToken(token);localStorage.setItem('messageNotifications','true');updateNotificationSetting();}catch(e){console.warn('Push registration pending',e);toast('Android értesítésregisztráció sikertelen: '+(e?.message||'ellenőrizd az értesítési engedélyt'));}
     }else if(localStorage.getItem('messageNotifications')==='true'){
       try{if(Notification.permission==='granted')await registerWeb();}catch(e){console.warn('Push registration pending',e);}
     }
