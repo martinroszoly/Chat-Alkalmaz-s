@@ -1,6 +1,8 @@
 name: Pulse Firebase Hosting deploy
 on:
   workflow_dispatch:
+  push:
+    branches: [codex/free-fcm-spark]
 permissions:
   contents: read
 jobs:

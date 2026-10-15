@@ -218,6 +218,9 @@ body:not(.auth-required) .shell {
 }
 #shell .chat[data-theme="dark"] .composer { border-color: #332b1d !important; }
 #shell .chat[data-theme="dark"] .composer .send { color: #1a1307 !important; }
+#messages { overflow-anchor: auto; scroll-behavior: auto; }
+.bubble .message-image { width: auto; max-width: min(60vw, 240px); max-height: min(30vh, 220px); height: auto; object-fit: contain; }
+.msg-row:has(.message-image) { max-width: min(78%, 270px); }
 
 .group-modal,
 .call-overlay { background: #000c !important; }

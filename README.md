@@ -24,7 +24,7 @@ Az Android és iOS projektek a repóban vannak. A `www` csomag és a natív webe
 1. **Firebase Android app:** regisztráld a `hu.martinroszoly.chat` csomagnevet a `chat-alkalmazas-578c8` projektben. A letöltött `google-services.json` fájlt tedd az `android/app` mappába. A GitHub buildhez ugyanezt a JSON-t a `GOOGLE_SERVICES_JSON` repository secret tartalmazza. Konfiguráció nélkül az APK felülete működik, a natív háttérértesítés regisztrációja hibaüzenetet ad.
 2. **Ingyenes Android háttérértesítés (Spark):** a Firebase Cloud Messaging ingyenes, de az FCM-üzenetet egy megbízható szervernek kell elküldenie. Alapértelmezésben a repó `free-push-apps-script/Code.gs` fájlja erre egy Google Apps Script webappot használ: ugyanazzal a Google-fiókkal működik, nem igényel Blaze-t és Cloudflare-fiókot sem. A script Firebase-bejelentkezett küldőt fogad el, majd maga ellenőrzi az üzenet/hívás jogosultságát a Realtime Database-ben.
 
-   - hozz létre egy új Apps Script projektet, másold be a `Code.gs` fájlt, majd Web Appként élesítsd úgy, hogy bárki meghívhassa;
+   - frissítsd a már használt Apps Script projekt `Code.gs` és `appsscript.json` fájlját ebből a repóból, majd hozz létre új Web App-verziót úgy, hogy bárki meghívhassa; az új `userinfo.email` OAuth-jogosultságot a Google engedélykérő képernyőjén fogadd el;
    - a script a tulajdonos Google-fiókjának jogosultságával küldi az FCM-et; nincs külön privát kulcs és nincs GitHubba feltöltött titok;
    - a Web App URL-jét írd a `push-config.json` `pushGatewayUrl` mezőjébe;
    - telepítsd az adatbázisszabályokat: `firebase deploy --only database`.

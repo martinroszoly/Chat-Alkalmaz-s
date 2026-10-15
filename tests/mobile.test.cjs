@@ -45,6 +45,14 @@ test('service worker focuses an existing app and sends the exact route',async()=
  const handlers={},events=[];const ctx=vm.createContext({self:{addEventListener:(n,f)=>handlers[n]=f,registration:{scope:'https://example.test/Chat-Alkalmaz-s/'},location:{origin:'https://example.test'},clients:{matchAll:async()=>[{url:'https://example.test/Chat-Alkalmaz-s/',postMessage:d=>events.push(d),focus:async()=>events.push('focus')}]}},URL,importScripts:()=>{},firebase:{initializeApp:()=>{},messaging:()=>({onBackgroundMessage:()=>{}})}});
  vm.runInContext(fs.readFileSync('sw.js','utf8'),ctx);let wait;handlers.notificationclick({notification:{close:()=>{},data:{chatId:'one'}},waitUntil:p=>wait=p});await wait;assert.equal(events[0].chatId,'one');assert.equal(events[1],'focus');
 });
+test('registration theme is shared app-wide and the push gateway has its RTDB identity scope',()=>{
+ const theme=fs.readFileSync('pulze-theme.css','utf8'),manifest=JSON.parse(fs.readFileSync('free-push-apps-script/appsscript.json','utf8'));
+ assert(html.indexOf('pulze-theme.css?v=4')<html.indexOf('<body'));
+ assert(!html.includes('pulseAqua'));
+ assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v6'));
+ assert(manifest.oauthScopes.includes('https://www.googleapis.com/auth/userinfo.email'));
+ assert(manifest.oauthScopes.includes('https://www.googleapis.com/auth/firebase.database'));
+});
 test('profile login sync preserves gallery, and push tokens can only be written by their owner',()=>{
  assert(html.includes('publishPublicProfile(user,{...data,username,avatar})'));
  const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;assert.equal(rules.pushDevices['.read'],false);assert.equal(rules.pushDevices['.write'],false);assert(rules.pushDevices.$uid['.read'].includes('auth.uid === $uid'));assert(rules.pushDevices.$uid.$deviceId['.write'].includes('auth.uid === $uid'));assert(rules.pushDevices.$uid.$deviceId['.validate'].includes("'android'"));assert.equal(rules.serverConfig['.read'],false);
@@ -66,7 +74,7 @@ test('read receipts are sent as one atomic database update',()=>{
  assert(!source.includes('Promise.allSettled'));
 });
 test('chat photos are constrained on mobile and scroll position is anchored',()=>{
- assert(html.includes('max-width:min(60vw,240px)'));
+ assert(fs.readFileSync('pulze-theme.css','utf8').includes('max-width: min(60vw, 240px)'));
  assert(fs.readFileSync('calls.js','utf8').includes('max-width:min(60vw,240px)'));
  assert(html.includes("const pulseRenderMessages=renderMessages"));
  assert(html.includes("anchorIndex=rows.findIndex"));
