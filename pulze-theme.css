@@ -363,3 +363,98 @@ body.auth-required .text-button { color: #f0bf4b !important; }
   body.auth-required .profile-card { padding: 20px !important; }
   body.auth-required .profile-card::before { width: 66px; height: 66px; margin-bottom: 12px; }
 }
+
+/* Final app-state overrides: older embedded palettes had more specific selectors. */
+body:not(.auth-required) #shell.shell,
+body:not(.auth-required) #shell .app-topbar,
+body:not(.auth-required) #shell .rail,
+body:not(.auth-required) #shell .sidebar,
+body:not(.auth-required) #shell .chat,
+body:not(.auth-required) #shell > .profile,
+body:not(.auth-required) #shell > .settings,
+body:not(.auth-required) #shell > .friends-view,
+body:not(.auth-required) #shell > .public-profile {
+  color: #f5f1e7 !important;
+  background-color: #0b0b0d !important;
+  border-color: #493b22 !important;
+}
+body:not(.auth-required) #shell > .profile,
+body:not(.auth-required) #shell > .settings,
+body:not(.auth-required) #shell > .friends-view,
+body:not(.auth-required) #shell > .public-profile {
+  background:
+    radial-gradient(ellipse at 9% 8%, rgba(222, 155, 39, .07), transparent 38%),
+    radial-gradient(ellipse at 92% 90%, rgba(255, 213, 89, .055), transparent 42%),
+    #0b0b0d !important;
+}
+body:not(.auth-required) #shell .profile-card,
+body:not(.auth-required) #shell .settings-card,
+body:not(.auth-required) #shell .public-profile-card,
+body:not(.auth-required) #shell .friend-card {
+  color: #f5f1e7 !important;
+  background: linear-gradient(145deg, #171719, #101012 62%, #19150e) !important;
+  border: 1px solid #514326 !important;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .34) !important;
+}
+body:not(.auth-required) #shell .profile-title,
+body:not(.auth-required) #shell .settings-card h2,
+body:not(.auth-required) #shell .public-profile-card .profile-title,
+body:not(.auth-required) #shell .top-brand strong,
+body:not(.auth-required) #shell .head-row h1,
+body:not(.auth-required) #shell .person-name,
+body:not(.auth-required) #shell .chat-person strong {
+  color: #f7f2e7 !important;
+  -webkit-text-fill-color: #f7f2e7 !important;
+}
+body:not(.auth-required) #shell .nav-tab.active,
+body:not(.auth-required) #shell .tabs .tab.active,
+body:not(.auth-required) #shell .friends-tab.active {
+  color: #191307 !important;
+  background: var(--pulze-gradient) !important;
+  border-color: #d99a28 !important;
+  border-image: none !important;
+}
+body:not(.auth-required) #shell .blue-btn,
+body:not(.auth-required) #shell .new-group,
+body:not(.auth-required) #shell .create,
+body:not(.auth-required) #shell .send,
+body:not(.auth-required) #shell .registration-submit,
+body:not(.auth-required) #shell .auth-submit {
+  color: #191307 !important;
+  background: var(--pulze-gradient) !important;
+  background-image: var(--pulze-gradient) !important;
+  border: 1px solid #f0c451 !important;
+  box-shadow: 0 4px 16px rgba(213, 139, 25, .2) !important;
+}
+body:not(.auth-required) #shell .search,
+body:not(.auth-required) #shell .profile-search,
+body:not(.auth-required) #shell .chat-search,
+body:not(.auth-required) #shell .profile-card input,
+body:not(.auth-required) #shell .profile-card textarea,
+body:not(.auth-required) #shell .settings-card input,
+body:not(.auth-required) #shell .settings-card textarea,
+body:not(.auth-required) #shell .settings-card select {
+  color: #f5f1e7 !important;
+  background: #171719 !important;
+  border-color: #514326 !important;
+}
+body:not(.auth-required) #shell .chat[data-theme] .composer .compose-input {
+  color: #f5f1e7 !important;
+  background: #1a1918 !important;
+  border: 1px solid #4d3e22 !important;
+}
+body:not(.auth-required) #shell .chat[data-theme] .composer .send {
+  color: #191307 !important;
+  background: var(--pulze-gradient) !important;
+}
+body:not(.auth-required) .admin-user-card {
+  color: #f5f1e7 !important;
+  background: linear-gradient(145deg, #171719, #111113 72%, #19150e) !important;
+  border: 1px solid #514326 !important;
+}
+body:not(.auth-required) .admin-user-fields input.admin-name,
+body:not(.auth-required) .admin-dialog > input {
+  color: #f5f1e7 !important;
+  background: #171719 !important;
+  border: 1px solid #514326 !important;
+}
