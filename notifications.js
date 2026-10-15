@@ -24,6 +24,7 @@
   }
   async function saveNativeToken(data){
     if(!firebaseUser?.emailVerified)return;
+    if(typeof data?.token!=='string'||data.token.length<20)throw new Error('A telefon nem adott érvényes értesítési tokent');
     await window.chatFirebase.registerPushDevice({deviceId,...data});registered=true;
   }
   async function registerWeb(){
@@ -36,7 +37,7 @@
   async function enableNotifications(){
     try{
       if(!firebaseUser?.emailVerified)throw new Error('Az értesítésekhez jelentkezz be');
-      if(window.ChatNative?.isNative){const token=await window.ChatNative.phone.registerPush();if(token?.token)await saveNativeToken(token);}
+      if(window.ChatNative?.isNative){const token=await window.ChatNative.phone.registerPush();await saveNativeToken(token);}
       else{
         if(!('Notification'in window))throw new Error('Ezen a böngészőn nem támogatott az értesítés');
         if(await Notification.requestPermission()!=='granted')throw new Error('Engedélyezd az értesítéseket a telefon beállításaiban');
@@ -45,7 +46,7 @@
       localStorage.setItem('messageNotifications','true');updateNotificationSetting();
       if(window.ChatNative?.isNative){document.getElementById('notificationToggle').classList.add('on');document.getElementById('notificationStatus').textContent='Bekapcsolva · telefonos értesítések';}
       toast('Értesítési engedély megadva');
-    }catch(e){toast(e.message||'Nem sikerült bekapcsolni az értesítéseket');}
+    }catch(e){if(window.ChatNative?.isNative){registered=false;localStorage.removeItem('messageNotifications');updateNotificationSetting();}toast(e.message||'Nem sikerült bekapcsolni az értesítéseket');}
   }
   function beep(){
     try{const ctx=new(window.AudioContext||window.webkitAudioContext)(),o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=880;g.gain.setValueAtTime(.08,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.18);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.2);o.onended=()=>ctx.close();}catch{}
@@ -68,7 +69,7 @@
     if(window.ChatNative?.isNative)await window.ChatNative.phone.getPendingAction().then(openRoute).catch(console.warn);
     if(pendingRoute)await openRoute(pendingRoute);else await openRoute(routeFromUrl());
     if(window.ChatNative?.isNative){
-      try{const token=await window.ChatNative.phone.registerPush();if(token?.token)await saveNativeToken(token);localStorage.setItem('messageNotifications','true');updateNotificationSetting();}catch(e){console.warn('Push registration pending',e);toast('Android értesítésregisztráció sikertelen: '+(e?.message||'ellenőrizd az értesítési engedélyt'));}
+      try{const token=await window.ChatNative.phone.registerPush();await saveNativeToken(token);localStorage.setItem('messageNotifications','true');updateNotificationSetting();}catch(e){registered=false;localStorage.removeItem('messageNotifications');updateNotificationSetting();console.warn('Push registration pending',e);toast('Android értesítésregisztráció sikertelen: '+(e?.message||'ellenőrizd az értesítési engedélyt'));}
     }else if(localStorage.getItem('messageNotifications')==='true'){
       try{if(Notification.permission==='granted')await registerWeb();}catch(e){console.warn('Push registration pending',e);}
     }
@@ -83,4 +84,5 @@
   window.addEventListener('chat:native-end',e=>{if(activePhoneCall?.id===e.detail.callId||pendingPhoneCall?.id===e.detail.callId)endPhoneCall();else openRoute({...e.detail,action:'decline'});});
   window.addEventListener('chat:native-push-error',e=>toast(e.detail.message||'Az értesítéseket nem sikerült regisztrálni'));
   window.ChatMobile={enableNotifications,accountReady,beforeSignOut,alertMessage,alertCall,openRoute};
+  window.ChatMobile.isRegistered=()=>registered;
 })();

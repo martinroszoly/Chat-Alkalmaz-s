@@ -41,6 +41,11 @@ test('notification opens the requested existing chat without creating a new one'
  Object.assign(context,{selectChat:id=>opened=id,showChats:()=>shown=true});vm.runInContext(fs.readFileSync('notifications.js','utf8'),context);
  await context.window.ChatMobile.openRoute({chatId:'one'});assert.equal(opened,'one');assert.equal(shown,true);dom.window.close();
 });
+test('native notifications are not marked enabled until a valid FCM token is saved',async()=>{
+ const {context,w,dom}=fixture(),errors=[];context.firebaseUser={uid:'me',emailVerified:true};context.window={addEventListener:()=>{},ChatNative:{isNative:true,platform:'android',phone:{getPendingAction:async()=>({}),registerPush:async()=>undefined}}};context.crypto=require('node:crypto').webcrypto;context.location={href:'https://example.test/'};context.URL=URL;context.window.chatFirebase={registerPushDevice:async()=>true};context.toast=message=>errors.push(message);context.updateNotificationSetting=()=>{};
+ vm.runInContext(fs.readFileSync('notifications.js','utf8'),context);await context.window.ChatMobile.accountReady(context.firebaseUser);
+ assert.equal(w.localStorage.getItem('messageNotifications'),null);assert.equal(context.window.ChatMobile.isRegistered(),false);assert.match(errors[0],/értesítési tokent/);dom.window.close();
+});
 test('service worker focuses an existing app and sends the exact route',async()=>{
  const handlers={},events=[];const ctx=vm.createContext({self:{addEventListener:(n,f)=>handlers[n]=f,registration:{scope:'https://example.test/Chat-Alkalmaz-s/'},location:{origin:'https://example.test'},clients:{matchAll:async()=>[{url:'https://example.test/Chat-Alkalmaz-s/',postMessage:d=>events.push(d),focus:async()=>events.push('focus')}]}},URL,importScripts:()=>{},firebase:{initializeApp:()=>{},messaging:()=>({onBackgroundMessage:()=>{}})}});
  vm.runInContext(fs.readFileSync('sw.js','utf8'),ctx);let wait;handlers.notificationclick({notification:{close:()=>{},data:{chatId:'one'}},waitUntil:p=>wait=p});await wait;assert.equal(events[0].chatId,'one');assert.equal(events[1],'focus');
@@ -68,7 +73,7 @@ test('mobile headers respect camera safe areas and notification reads use server
 test('profile login sync preserves gallery, and push tokens can only be written by their owner',()=>{
  assert(html.includes('publishPublicProfile(user,{...data,username,avatar})'));
  const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;assert.equal(rules.pushDevices['.read'],false);assert.equal(rules.pushDevices['.write'],false);assert(rules.pushDevices.$uid['.read'].includes('auth.uid === $uid'));assert(!rules.pushDevices.$uid['.read'].includes("root.child('friends')"));assert(rules.pushDevices.$uid.$deviceId['.write'].includes('auth.uid === $uid'));assert(rules.pushDevices.$uid.$deviceId['.validate'].includes("'android'"));assert.equal(rules.serverConfig['.read'],false);
- const register=html.slice(html.indexOf(' registerPushDevice:'),html.indexOf(' unregisterPushDevice:'));assert(register.includes('set(ref(db,"pushDevices/"+u.uid+"/"+id)'));assert(!register.includes('sendFreePush'));
+ const register=html.slice(html.indexOf(' registerPushDevice:'),html.indexOf(' unregisterPushDevice:'));assert(register.includes('set(ref(db,path)'));assert(register.includes('const saved=(await get(ref(db,path))).val()'));assert(!register.includes('sendFreePush'));assert(html.includes('native?!!window.ChatMobile?.isRegistered?.()'));
 });
 test('opening a read chat does not create an endless read receipt loop',()=>{
  const start=html.lastIndexOf("markChatRead=function(chat)");
