@@ -364,6 +364,24 @@ body.auth-required .text-button { color: #f0bf4b !important; }
   body.auth-required .profile-card::before { width: 66px; height: 66px; margin-bottom: 12px; }
 }
 
+/* Keep tappable headers below the camera/status-bar safe area on notched phones. */
+@media (max-width: 620px) {
+  .shell:not(.mobile-chat) {
+    grid-template-rows: calc(150px + env(safe-area-inset-top, 0px)) minmax(0, 1fr) !important;
+  }
+  .shell:not(.mobile-chat) > .app-topbar {
+    height: calc(150px + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px) !important;
+  }
+  .shell.mobile-chat .chat-head {
+    box-sizing: border-box;
+    height: calc(66px + env(safe-area-inset-top, 0px)) !important;
+    min-height: calc(66px + env(safe-area-inset-top, 0px)) !important;
+    flex: 0 0 calc(66px + env(safe-area-inset-top, 0px)) !important;
+    padding-top: env(safe-area-inset-top, 0px) !important;
+  }
+}
+
 /* Final app-state overrides: older embedded palettes had more specific selectors. */
 body:not(.auth-required) #shell.shell,
 body:not(.auth-required) #shell .app-topbar,

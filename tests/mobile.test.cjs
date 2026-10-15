@@ -57,9 +57,17 @@ test('gold-and-black pulsing theme loads app-wide and the push gateway has its R
  assert(manifest.oauthScopes.includes('https://www.googleapis.com/auth/userinfo.email'));
  assert(manifest.oauthScopes.includes('https://www.googleapis.com/auth/firebase.database'));
 });
+test('mobile headers respect camera safe areas and notification reads use server authorization',()=>{
+ const theme=fs.readFileSync('pulze-theme.css','utf8'),gateway=fs.readFileSync('free-push-apps-script/Code.gs','utf8');
+ assert(theme.includes('calc(66px + env(safe-area-inset-top, 0px))'));
+ assert(theme.includes('padding-top: env(safe-area-inset-top, 0px) !important'));
+ assert(gateway.includes("headers:{Authorization:'Bearer '+token}"));
+ assert(gateway.includes("d.platform==='android'||d.platform==='web'"));
+ assert(gateway.includes('devices_(id,adminToken)'));
+});
 test('profile login sync preserves gallery, and push tokens can only be written by their owner',()=>{
  assert(html.includes('publishPublicProfile(user,{...data,username,avatar})'));
- const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;assert.equal(rules.pushDevices['.read'],false);assert.equal(rules.pushDevices['.write'],false);assert(rules.pushDevices.$uid['.read'].includes('auth.uid === $uid'));assert(rules.pushDevices.$uid['.read'].includes("root.child('friends').child(auth.uid).child($uid)"));assert(rules.pushDevices.$uid.$deviceId['.write'].includes('auth.uid === $uid'));assert(rules.pushDevices.$uid.$deviceId['.validate'].includes("'android'"));assert.equal(rules.serverConfig['.read'],false);
+ const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;assert.equal(rules.pushDevices['.read'],false);assert.equal(rules.pushDevices['.write'],false);assert(rules.pushDevices.$uid['.read'].includes('auth.uid === $uid'));assert(!rules.pushDevices.$uid['.read'].includes("root.child('friends')"));assert(rules.pushDevices.$uid.$deviceId['.write'].includes('auth.uid === $uid'));assert(rules.pushDevices.$uid.$deviceId['.validate'].includes("'android'"));assert.equal(rules.serverConfig['.read'],false);
  const register=html.slice(html.indexOf(' registerPushDevice:'),html.indexOf(' unregisterPushDevice:'));assert(register.includes('set(ref(db,"pushDevices/"+u.uid+"/"+id)'));assert(!register.includes('sendFreePush'));
 });
 test('opening a read chat does not create an endless read receipt loop',()=>{
