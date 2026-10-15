@@ -186,7 +186,7 @@
       ".read": false,
       ".write": false,
       "$uid": {
-        ".read": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
+        ".read": "auth != null && auth.token.email_verified === true && (auth.uid === $uid || root.child('friends').child(auth.uid).child($uid).val() === true || root.child('friends').child($uid).child(auth.uid).val() === true)",
         "$deviceId": {
           ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
           ".validate": "newData.hasChildren(['platform','token','updatedAt']) && newData.child('platform').isString() && (newData.child('platform').val() === 'android' || newData.child('platform').val() === 'ios' || newData.child('platform').val() === 'web') && newData.child('token').isString() && newData.child('token').val().length >= 20 && newData.child('token').val().length <= 4096 && newData.child('updatedAt').isNumber()"

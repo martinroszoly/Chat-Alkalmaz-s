@@ -1,37 +1,82 @@
 :root {
   color-scheme: dark;
-  --blue: #e5ad31;
-  --ink: #f4f1e9;
+  --blue: #e7b43a;
+  --ink: #f5f1e7;
   --muted: #aaa397;
-  --line: #332b1d;
+  --line: #3c3324;
   --paper: #111113;
   --bg: #080809;
-  --soft: #171719;
-  --pulze-gold: #ffd95c;
+  --soft: #181719;
+  --pulze-gold: #ffdc67;
   --pulze-amber: #d88719;
-  --pulze-gradient: linear-gradient(125deg, #ffe26d 0%, #f5be38 46%, #d98718 100%);
+  --pulze-gradient: linear-gradient(120deg, #ffe675 0%, #f5c43d 48%, #df901c 100%);
 }
 
-html,
-body {
-  background: linear-gradient(145deg, #080809 0%, #101011 52%, #080809 100%) !important;
+* { box-sizing: border-box; }
+html, body {
+  background: #080809 !important;
   color: var(--ink) !important;
-  animation: none !important;
+  color-scheme: dark;
+}
+body {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse at 50% 45%, #11100d 0%, #0b0b0c 48%, #080809 100%) !important;
+}
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  transform-origin: center;
+}
+body::before {
+  background:
+    radial-gradient(ellipse 34% 24% at 11% 17%, rgba(255, 202, 67, .115), transparent 76%),
+    radial-gradient(ellipse 29% 25% at 87% 27%, rgba(210, 126, 24, .095), transparent 78%),
+    radial-gradient(ellipse 36% 28% at 69% 84%, rgba(255, 214, 91, .09), transparent 76%),
+    radial-gradient(ellipse 23% 20% at 24% 76%, rgba(201, 118, 18, .065), transparent 78%);
+  filter: blur(18px);
+  animation: pulze-glow 24s ease-in-out infinite alternate;
+}
+body::after {
+  background:
+    radial-gradient(ellipse 27% 19% at 25% 30%, rgba(255, 222, 103, .035), transparent 72%),
+    radial-gradient(ellipse 30% 22% at 78% 61%, rgba(231, 151, 34, .04), transparent 74%);
+  filter: blur(30px);
+  animation: pulze-glow 32s ease-in-out -10s infinite alternate-reverse;
+}
+@keyframes pulze-glow {
+  0% { opacity: .62; transform: translate3d(-1%, -1%, 0) scale(.98); }
+  50% { opacity: .92; }
+  100% { opacity: .68; transform: translate3d(1.2%, .8%, 0) scale(1.035); }
+}
+@media (prefers-reduced-motion: reduce) {
+  body::before, body::after { animation: none; }
 }
 
-body { color-scheme: dark; }
+body, input, textarea, select, button { font-family: 'DM Sans', sans-serif; }
 input, textarea, select { color-scheme: dark; }
-input::placeholder, textarea::placeholder { color: #8f887b !important; opacity: 1; }
+input::placeholder, textarea::placeholder { color: #91897b !important; opacity: 1; }
 :focus-visible { outline: 2px solid var(--pulze-gold) !important; outline-offset: 2px; }
 
 .shell,
 body:not(.auth-required) .shell {
-  background: #0c0c0e !important;
-  border-color: #302819 !important;
-  box-shadow: 0 12px 50px #000b !important;
+  position: relative;
+  z-index: 1;
+  color: var(--ink) !important;
+  background: rgba(12, 12, 14, .86) !important;
+  border: 1px solid rgba(161, 124, 46, .3) !important;
+  box-shadow: 0 18px 64px rgba(0, 0, 0, .52), 0 0 38px rgba(198, 139, 31, .045) !important;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
-
 .app-topbar,
+.rail,
 .sidebar,
 .chat,
 .chat-head,
@@ -41,213 +86,226 @@ body:not(.auth-required) .shell {
 .friends-view,
 .public-profile {
   color: var(--ink) !important;
-  background: #0b0b0d !important;
-  border-color: #2b261c !important;
+  background: rgba(12, 12, 14, .92) !important;
+  border-color: #332b1e !important;
 }
-
-.top-brand strong,
-.head-row h1,
-.profile-title,
-.settings-card h1,
-.settings-card h2,
-.public-profile-card h1,
-.public-profile-card h2,
-.friends-view h1,
-.friends-view h2 { color: #f7f3e9 !important; }
-
+.app-topbar {
+  background: linear-gradient(100deg, rgba(13, 13, 15, .97), rgba(20, 17, 12, .94) 52%, rgba(13, 13, 15, .97)) !important;
+  border-bottom: 1px solid #40331c !important;
+  box-shadow: 0 5px 24px rgba(0, 0, 0, .2) !important;
+}
+.rail, .sidebar { border-color: #342b1d !important; }
+.top-brand strong, .head-row h1,
+.profile-title, .settings-card h1, .settings-card h2,
+.public-profile-card h1, .public-profile-card h2,
+.friends-view h1, .friends-view h2 { color: #f7f2e7 !important; }
 .brand {
   background: #080809 url('./icons/icon-192.png') center / cover no-repeat !important;
   color: transparent !important;
   border: 1px solid #80611f !important;
   border-radius: 13px !important;
-  box-shadow: 0 5px 18px #0009 !important;
+  box-shadow: 0 4px 18px rgba(213, 150, 34, .14) !important;
 }
-
-.rail,
-.sidebar,
-.app-topbar { background-color: #0b0b0d !important; }
-.rail { border-color: #2b261c !important; }
-.rail-btn { color: #a59b87 !important; }
-.rail-btn:hover,
-.rail-btn.active,
-.nav-tab.active,
-.tabs .tab.active,
-.tab.active,
-.filter-tab.active,
-.chat-filter.active {
-  color: #17120a !important;
+.rail-btn { color: #a79b84 !important; }
+.rail-btn:hover, .rail-btn.active,
+.nav-tab.active, .tabs .tab.active, .tab.active,
+.filter-tab.active, .chat-filter.active {
+  color: #1a1408 !important;
   background: var(--pulze-gradient) !important;
-  box-shadow: 0 3px 12px #d58b1933 !important;
+  box-shadow: 0 3px 14px rgba(213, 139, 25, .18) !important;
 }
-
-.round-action,
-.tool,
-.rail-btn:hover,
-.person:hover,
-.person.selected,
-.search,
-.profile-search,
-.chat-search,
-.compose-input,
-.profile-card input,
-.profile-card textarea,
-.settings-card input,
-.settings-card textarea,
-.settings-card select,
-.modal-box input,
-.modal-box select,
-.modal-box textarea {
-  background: #151517 !important;
-  color: #f1eee5 !important;
-  border-color: #514222 !important;
+.nav-tab { color: #b6ad9c !important; }
+.round-action, .tool, .search, .profile-search, .chat-search,
+.compose-input, .profile-card input, .profile-card textarea,
+.settings-card input, .settings-card textarea, .settings-card select,
+.modal-box input, .modal-box select, .modal-box textarea,
+.admin-dialog input, .admin-dialog textarea {
+  background: #171719 !important;
+  color: #f5f1e7 !important;
+  border-color: #514326 !important;
 }
+.search input, .compose-input, .profile-card input, .profile-card textarea,
+.settings-card input, .settings-card textarea, .settings-card select,
+.modal-box input, .modal-box select, .modal-box textarea { color: #f5f1e7 !important; }
+.tool, .round-action { color: #e3b844 !important; }
+.tool:hover, .round-action:hover { background: #282114 !important; color: #ffdc67 !important; }
 
-.search input,
-.compose-input,
-.profile-card input,
-.profile-card textarea,
-.settings-card input,
-.settings-card textarea,
-.settings-card select,
-.modal-box input,
-.modal-box select,
-.modal-box textarea { color: #f4f1e9 !important; }
-
-.profile-card,
-.settings-card,
-.public-profile-card,
-.friend-card,
-.modal-box,
-.theme-modal-box {
+.profile, .settings, .friends-view, .public-profile {
+  background:
+    radial-gradient(ellipse at 10% 7%, rgba(222, 155, 39, .055), transparent 34%),
+    radial-gradient(ellipse at 92% 88%, rgba(255, 213, 89, .045), transparent 39%),
+    #0b0b0d !important;
+}
+.profile-card, .settings-card, .public-profile-card, .friend-card,
+.modal-box, .theme-modal-box, .theme-option, .profile-results,
+.admin-dialog, .ban-card, .call-dialog {
   color: var(--ink) !important;
-  background: #111113 !important;
-  background-image: none !important;
-  border-color: #4a3b20 !important;
-  box-shadow: 0 14px 40px #0008 !important;
+  background: linear-gradient(145deg, #141416, #101012 60%, #15130f) !important;
+  border-color: #493b22 !important;
+  box-shadow: 0 14px 42px rgba(0, 0, 0, .36) !important;
 }
-
-.profile-card label,
-.settings-card label,
-.settings-card p,
-.profile-card .hint,
-.hint,
-.setting-row span,
-.hero-info p,
-.preview,
-.time,
-.msg-time,
-.day { color: #b2aa9b !important; }
-
-.profile-card input,
-.profile-card textarea,
-.settings-card input,
-.settings-card textarea,
-.settings-card select,
-.modal-box input,
-.modal-box select,
-.modal-box textarea {
-  border: 1px solid #524321 !important;
+.profile-card label, .settings-card label, .settings-card p,
+.profile-card .hint, .hint, .setting-row span, .hero-info p,
+.preview, .time, .msg-time, .day, .theme-intro,
+.chat-person #chatStatus, .friend-info small { color: #b1a896 !important; }
+.profile-card input, .profile-card textarea, .settings-card input,
+.settings-card textarea, .settings-card select, .modal-box input,
+.modal-box select, .modal-box textarea {
+  border: 1px solid #514326 !important;
   border-radius: 11px !important;
 }
+.big-avatar, .avatar, .msg-avatar, .result-avatar {
+  background-color: #1a1813 !important;
+  color: #d7b14f !important;
+  border-color: #5b4928 !important;
+}
+.profile-hero { border-bottom-color: #403522 !important; }
+.field label, .setting-row b { color: #d6cdbb !important; }
 
-.blue-btn,
-#saveProfileBtn,
-.new-group,
-.create,
-.send,
-.registration-submit,
-.auth-submit,
-.login-button,
-.register-button,
-.modal-actions .create {
+.blue-btn, #saveProfileBtn, .new-group, .create, .send,
+.registration-submit, .auth-submit, .login-button, .register-button,
+.modal-actions .create, .profile-preview-box .create {
   background: var(--pulze-gradient) !important;
-  color: #1a1307 !important;
-  border: 1px solid #f5c858 !important;
-  box-shadow: 0 4px 15px #d58b192e !important;
+  color: #191307 !important;
+  border: 1px solid #f0c451 !important;
+  box-shadow: 0 4px 16px rgba(213, 139, 25, .2) !important;
 }
-
-.text-button,
-.auth-switch button,
-.auth-link,
-.profile-card a,
-.settings-card a { color: #f0bf4b !important; }
-.badge,
-.nav-alert { background: #d8911e !important; color: #17120a !important; }
-.add-photo { background: #151517 !important; color: #f0bf4b !important; border-color: #896721 !important; }
-.toggle.on { background: #d8911e !important; }
-.cancel,
-.back-profile,
-.group-add-people-btn,
-.group-photo-actions button {
+button { transition: background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease; }
+button:active { transform: scale(.98); }
+.blue-btn:hover, .create:hover, .new-group:hover, .send:hover { filter: brightness(1.06); }
+.text-button, .auth-switch button, .auth-link,
+.profile-card a, .settings-card a, .back-profile { color: #f0bf4b !important; }
+.badge, .nav-alert { background: #d8911e !important; color: #17120a !important; }
+.add-photo { background: #171719 !important; color: #f0bf4b !important; border-color: #896721 !important; }
+.toggle { background: #514a3d !important; }
+.toggle.on { background: var(--pulze-gradient) !important; }
+.toggle.on::after { background: #fff9e9 !important; }
+.cancel, .back-profile, .group-add-people-btn, .group-photo-actions button,
+.theme-option, .admin-dialog button, .ban-card button {
   color: #e8dfce !important;
-  background: #19191b !important;
-  border: 1px solid #514222 !important;
+  background: #1b1a18 !important;
+  border: 1px solid #514326 !important;
 }
-.logout-button {
+.logout-button, .admin-view-button {
   color: #f0bf4b !important;
   background: #171719 !important;
   border: 1px solid #806122 !important;
 }
-.admin-dialog,
-.ban-card {
-  color: #f4f1e9 !important;
-  background: #111113 !important;
-  border-color: #4a3b20 !important;
+.nav-tab.active, .friends-tab.active { color: #191307 !important; }
+.friends-tab { color: #b9ae99 !important; border-bottom-color: transparent !important; }
+.friends-tab.active { background: var(--pulze-gradient) !important; border-radius: 10px 10px 0 0; }
+.friend-card { margin: 10px 0; }
+.person, .profile-result { color: var(--ink) !important; }
+.person.selected, .person:hover, .profile-result:hover {
+  background: linear-gradient(100deg, rgba(224, 167, 55, .12), rgba(123, 82, 23, .09)) !important;
 }
-.admin-dialog input,
-.admin-dialog button,
-.ban-card button {
-  color: #f4f1e9 !important;
-  background: #19191b !important;
-  border-color: #514222 !important;
-}
-.admin-dialog button:hover,
-.ban-card button:hover { background: #282115 !important; }
+.online { background: #82b978 !important; border-color: #171719 !important; }
 
-#shell .chat[data-theme="dark"] .chat-body {
-  background: linear-gradient(145deg, #09090a, #111113 56%, #09090a) !important;
+/* One consistent black-and-gold look for every conversation theme. */
+#shell .chat[data-theme] { color: var(--ink) !important; background: #0b0b0d !important; }
+#shell .chat[data-theme] .chat-head {
+  color: var(--ink) !important;
+  background: linear-gradient(105deg, #111113, #19150e 55%, #111113) !important;
+  border-bottom: 1px solid #493b22 !important;
 }
-#shell .chat[data-theme="dark"] .msg-row:not(.mine) .bubble {
-  background: #1a1a1c !important;
+#shell .chat[data-theme] .chat-head #chatName { color: #f7f2e7 !important; }
+#shell .chat[data-theme] .chat-head #chatStatus { color: #bca66f !important; }
+#shell .chat[data-theme] .chat-head .tool {
+  color: #f0bf4b !important;
+  background: #1b1a18 !important;
+  border: 1px solid #594624 !important;
+}
+#shell .chat[data-theme] .chat-body {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 8% 11%, rgba(228, 166, 47, .065), transparent 34%),
+    radial-gradient(ellipse at 92% 79%, rgba(244, 191, 67, .05), transparent 38%),
+    linear-gradient(145deg, #09090a, #101012 54%, #0a0a0b) !important;
+  background-position: center !important;
+  background-size: auto !important;
+}
+#shell .chat[data-theme] .chat-body::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  background:
+    radial-gradient(ellipse 34% 25% at 16% 18%, rgba(255, 211, 79, .045), transparent 75%),
+    radial-gradient(ellipse 30% 22% at 86% 83%, rgba(209, 133, 30, .04), transparent 75%) !important;
+  animation: pulze-chat-glow 26s ease-in-out infinite alternate !important;
+}
+#shell .chat[data-theme] .chat-body > * { position: relative; z-index: 1; }
+@keyframes pulze-chat-glow { from { opacity: .5; } to { opacity: 1; } }
+#shell .chat[data-theme] .msg-row:not(.mine) .bubble {
   color: #f1eee6 !important;
-  border: 1px solid #302a1f !important;
+  background: #1a1a1c !important;
+  border: 1px solid #352d20 !important;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, .18) !important;
 }
-#shell .chat[data-theme="dark"] .msg-row.mine .bubble {
-  background: var(--pulze-gradient) !important;
+#shell .chat[data-theme] .msg-row.mine .bubble {
   color: #1a1307 !important;
+  background: var(--pulze-gradient) !important;
+  border: 1px solid #e7b43a !important;
+  box-shadow: 0 4px 14px rgba(213, 139, 25, .13) !important;
 }
-#shell .chat[data-theme="dark"] .composer { border-color: #332b1d !important; }
-#shell .chat[data-theme="dark"] .composer .send { color: #1a1307 !important; }
-#messages { overflow-anchor: auto; scroll-behavior: auto; }
-.bubble .message-image { width: auto; max-width: min(60vw, 240px); max-height: min(30vh, 220px); height: auto; object-fit: contain; }
-.msg-row:has(.message-image) { max-width: min(78%, 270px); }
+#shell .chat[data-theme] .composer {
+  color: var(--ink) !important;
+  background: #111113 !important;
+  border-top: 1px solid #493b22 !important;
+}
+#shell .chat[data-theme] .composer .compose-btn { color: #dcb84f !important; }
+#shell .chat[data-theme] .compose-input {
+  color: #f5f1e7 !important;
+  background: #1a1918 !important;
+  border: 1px solid #4d3e22 !important;
+}
+#shell .chat[data-theme] .compose-input::placeholder { color: #9a907b !important; }
+#shell .chat[data-theme] .composer .send {
+  color: #1a1307 !important;
+  background: var(--pulze-gradient) !important;
+}
+#messages .bubble .message-image {
+  width: auto;
+  max-width: min(60vw, 240px);
+  max-height: min(30vh, 220px);
+  height: auto;
+  object-fit: contain;
+}
+.like-count { color: #f1eee6 !important; background: #191817 !important; border-color: #554321 !important; }
 
-.group-modal,
-.call-overlay { background: #000c !important; }
-.modal-box h3,
-.call-dialog h2,
-.call-dialog { color: #f4f1e9 !important; }
-.call-dialog { background: #111113 !important; border-color: #4a3b20 !important; }
-.toast { background: #171719 !important; border: 1px solid #4a3b20 !important; color: #f4f1e9 !important; }
-
-body.auth-required {
-  min-height: 100dvh !important;
-  background: linear-gradient(145deg, #080809 0%, #101011 54%, #080809 100%) !important;
+.group-modal, .call-overlay, .admin-backdrop, .banned-screen {
+  background: rgba(0, 0, 0, .78) !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.modal-box h3, .call-dialog h2, .call-dialog,
+.admin-dialog, .ban-card { color: #f4f1e9 !important; }
+.call-dialog { background: linear-gradient(145deg, #171614, #101012 62%, #17120b) !important; border-color: #594522 !important; }
+.call-avatar { background: var(--pulze-gradient) !important; color: #191307 !important; }
+.call-actions #callHangupButton { background: #a73531 !important; color: #fff !important; }
+.toast {
   color: #f4f1e9 !important;
+  background: #171719 !important;
+  border: 1px solid #594522 !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .4) !important;
 }
-body.auth-required .shell,
-body.auth-required .shell > .profile {
+
+body.auth-required { background: #080809 !important; color: #f4f1e9 !important; }
+body.auth-required .shell, body.auth-required .shell > .profile {
   background: transparent !important;
   background-image: none !important;
+  box-shadow: none !important;
 }
+body.auth-required .profile { background: transparent !important; }
 body.auth-required .profile-card {
   width: min(100%, 620px) !important;
+  color: #f4f1e9 !important;
+  background: rgba(17, 17, 19, .94) !important;
   border: 1px solid #4a3b20 !important;
   border-radius: 24px !important;
-  background: #111113 !important;
-  background-image: none !important;
-  box-shadow: 0 24px 70px #0009 !important;
-  color: #f4f1e9 !important;
+  box-shadow: 0 20px 65px rgba(0, 0, 0, .48) !important;
 }
 body.auth-required .profile-card::before {
   content: '';
@@ -273,20 +331,26 @@ body.auth-required .hero-info p {
 }
 body.auth-required .field input,
 body.auth-required .field textarea {
+  color: #f4f1e9 !important;
   background: #171719 !important;
   border: 1px solid #514222 !important;
-  color: #f4f1e9 !important;
+}
+body.auth-required .big-avatar {
+  color: #e6bb4e !important;
+  background: radial-gradient(circle, #211d15, #121214 72%) !important;
+  border: 1px solid #5b4928 !important;
+  box-shadow: 0 0 24px rgba(218, 157, 39, .09) !important;
 }
 body.auth-required .registration-info {
+  color: #d8c89e !important;
   background: #17150f !important;
   border: 1px solid #4a3b20 !important;
-  color: #d8c89e !important;
 }
 body.auth-required .blue-btn,
 body.auth-required #saveProfileBtn,
 body.auth-required .add-photo {
-  background: var(--pulze-gradient) !important;
   color: #1a1307 !important;
+  background: var(--pulze-gradient) !important;
   border-color: #f5c858 !important;
 }
 body.auth-required .auth-switch,
@@ -294,6 +358,7 @@ body.auth-required .auth-switch button,
 body.auth-required .text-button { color: #f0bf4b !important; }
 
 @media (max-width: 620px) {
+  .profile-card, .settings-card, .public-profile-card { border-radius: 18px !important; }
   body.auth-required .shell > .profile { padding: 14px !important; }
   body.auth-required .profile-card { padding: 20px !important; }
   body.auth-required .profile-card::before { width: 66px; height: 66px; margin-bottom: 12px; }
