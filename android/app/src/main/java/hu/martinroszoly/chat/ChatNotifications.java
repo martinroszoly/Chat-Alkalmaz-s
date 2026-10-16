@@ -12,12 +12,13 @@ import androidx.core.graphics.drawable.IconCompat;
 import java.util.Map;
 
 public class ChatNotifications {
-    static final String MESSAGES="chat_messages_v2",CALLS="chat_calls_v3",ACTIVE="chat_active_calls_v1";
+    static final long[] CALL_VIBRATION={0,700,400,700,400,1100};
+    static final String MESSAGES="chat_messages_v2",CALLS="chat_calls_v4",ACTIVE="chat_active_calls_v1";
     static int id(String key){return key.hashCode()&0x7fffffff;}
     static void channels(Context c){
         NotificationManager nm=c.getSystemService(NotificationManager.class);
         NotificationChannel messages=new NotificationChannel(MESSAGES,"Pulze-pro üzenetek",NotificationManager.IMPORTANCE_HIGH);messages.enableVibration(true);messages.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build());nm.createNotificationChannel(messages);
-        NotificationChannel calls=new NotificationChannel(CALLS,"Bejövő hívások",NotificationManager.IMPORTANCE_HIGH);calls.enableVibration(true);calls.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE),new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE).build());nm.createNotificationChannel(calls);
+        NotificationChannel calls=new NotificationChannel(CALLS,"Bejövő hívások",NotificationManager.IMPORTANCE_HIGH);calls.enableVibration(true);calls.setVibrationPattern(CALL_VIBRATION);calls.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE),new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build());nm.createNotificationChannel(calls);
         nm.createNotificationChannel(new NotificationChannel(ACTIVE,"Folyamatban lévő hívás",NotificationManager.IMPORTANCE_LOW));
     }
     static PendingIntent route(Context c,String chat,String call,String action){
@@ -40,7 +41,7 @@ public class ChatNotifications {
     static void incoming(Context c,String call,String name,long expiry,Bitmap avatar){
         if(expiry<=System.currentTimeMillis())return;channels(c);Person.Builder p=new Person.Builder().setName(name).setImportant(true);if(avatar!=null)p.setIcon(IconCompat.createWithBitmap(avatar));
         PendingIntent open=route(c,null,call,"open"),accept=route(c,null,call,"accept"),decline=route(c,null,call,"decline");
-        NotificationCompat.Builder b=new NotificationCompat.Builder(c,CALLS).setSmallIcon(R.drawable.ic_notification).setContentTitle(name+" hív").setContentText("Bejövő hívás").setStyle(NotificationCompat.CallStyle.forIncomingCall(p.build(),decline,accept)).setContentIntent(open).setFullScreenIntent(open,true).setCategory(NotificationCompat.CATEGORY_CALL).setPriority(NotificationCompat.PRIORITY_MAX).setOnlyAlertOnce(true).setAutoCancel(true).setTimeoutAfter(expiry-System.currentTimeMillis());
+        NotificationCompat.Builder b=new NotificationCompat.Builder(c,CALLS).setSmallIcon(R.drawable.ic_notification).setContentTitle(name+" hív").setContentText("Bejövő hívás").setStyle(NotificationCompat.CallStyle.forIncomingCall(p.build(),decline,accept)).setContentIntent(open).setFullScreenIntent(open,true).setCategory(NotificationCompat.CATEGORY_CALL).setPriority(NotificationCompat.PRIORITY_MAX).setOnlyAlertOnce(true).setVisibility(NotificationCompat.VISIBILITY_PUBLIC).setVibrate(CALL_VIBRATION).setAutoCancel(true).setTimeoutAfter(expiry-System.currentTimeMillis());
         if(avatar!=null)b.setLargeIcon(avatar);Notification n=b.build();n.flags|=Notification.FLAG_INSISTENT;c.getSystemService(NotificationManager.class).notify(id("call-"+call),n);
     }
     static void cancel(Context c,String call){c.getSystemService(NotificationManager.class).cancel(id("call-"+call));}
