@@ -41,7 +41,20 @@ async function sendFcm(uid,data){
   const devices=(await db().ref('pushDevices/'+uid).get()).val()||{};
   const entries=Object.entries(devices).filter(([,d])=>d.token&&d.platform!=='ios'&&d.updatedAt>Date.now()-60*86400000);
   if(!entries.length)return;
-  const results=await getMessaging().sendEach(entries.map(([,d])=>({token:d.token,data,android:{priority:'high',ttl:data.type==='call'?60000:86400000},webpush:{headers:{Urgency:'high',TTL:data.type==='call'?'60':'86400'}}})));
+  const link='https://chat-alkalmazas-578c8.web.app/?'+(data.callId?'call='+encodeURIComponent(data.callId):'chat='+encodeURIComponent(data.chatId||''));
+  const webpush={headers:{Urgency:'high',TTL:data.type==='call'?'60':'86400'}};
+  if(data.type!=='call-ended'){
+    webpush.notification={
+      title:data.title||'Pulze-pro',body:data.body||'Új üzenet',
+      icon:'https://chat-alkalmazas-578c8.web.app/icons/icon-192.png',
+      badge:'https://chat-alkalmazas-578c8.web.app/icons/badge.png',
+      tag:data.tag||'pulze-message',
+      data:{type:data.type||'',chatId:data.chatId||'',callId:data.callId||'',url:link},
+      ...(data.type==='call'?{requireInteraction:true}:{})
+    };
+    webpush.fcmOptions={link};
+  }
+  const results=await getMessaging().sendEach(entries.map(([,d])=>({token:d.token,data,android:{priority:'high',ttl:data.type==='call'?60000:86400000},webpush})));
   await Promise.all(results.responses.map((r,i)=>r.error&&['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(r.error.code)?db().ref('pushDevices/'+uid+'/'+entries[i][0]).remove():Promise.resolve()));
   const retry=results.responses.find(r=>r.error&&!['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(r.error.code));if(retry)throw retry.error;
 }
