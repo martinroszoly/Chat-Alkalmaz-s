@@ -128,3 +128,14 @@ test('accepting a request atomically repairs both users friend rows',async()=>{
  assert.equal(values['friends/sender/recipient'],true);
  dom.window.close();
 });
+
+test('iOS web push requires a Home Screen app and sends a visible FCM notification',()=>{
+ const notifications=fs.readFileSync('notifications.js','utf8'),worker=fs.readFileSync('sw.js','utf8'),gateway=fs.readFileSync('free-push-apps-script/Code.gs','utf8');
+ assert(notifications.includes('needsIOSHomeScreen()'));
+ assert(notifications.includes('Safari → Megosztás → Hozzáadás a Főképernyőhöz'));
+ assert(gateway.includes('webpush.notification={'));
+ assert(gateway.includes('webpush.fcm_options={link}'));
+ assert(gateway.includes("tag:'message-'+compact_(event.messageId,64)"));
+ assert(worker.includes('if(payload.notification)return'));
+ assert(worker.includes('pulze-pro-shell-v12'));
+});
