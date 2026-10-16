@@ -52,9 +52,9 @@ test('service worker focuses an existing app and sends the exact route',async()=
 });
 test('gold-and-black pulsing theme loads app-wide and the push gateway has its RTDB identity scope',()=>{
  const theme=fs.readFileSync('pulze-theme.css','utf8'),manifest=JSON.parse(fs.readFileSync('free-push-apps-script/appsscript.json','utf8'));
- assert(html.indexOf('pulze-theme.css?v=6')<html.indexOf('<body'));
+ assert(html.indexOf('pulze-theme.css?v=7')<html.indexOf('<body'));
  assert(!html.includes('pulseAqua'));
- assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v8'));
+ assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v9'));
  assert(theme.includes('--pulze-gradient'));
  assert(theme.includes('body::before'));
  assert(theme.includes('animation: pulze-glow'));
@@ -75,6 +75,7 @@ test('profile login sync preserves gallery, and push tokens can only be written 
  const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;assert.equal(rules.pushDevices['.read'],false);assert.equal(rules.pushDevices['.write'],false);assert(rules.pushDevices.$uid['.read'].includes('auth.uid === $uid'));assert(!rules.pushDevices.$uid['.read'].includes("root.child('friends')"));assert(rules.pushDevices.$uid.$deviceId['.write'].includes('auth.uid === $uid'));assert(rules.pushDevices.$uid.$deviceId['.validate'].includes("'android'"));assert.equal(rules.serverConfig['.read'],false);
  const register=html.slice(html.indexOf(' registerPushDevice:'),html.indexOf(' unregisterPushDevice:'));assert(register.includes('set(ref(db,path)'));assert(register.includes('const saved=(await get(ref(db,path))).val()'));assert(!register.includes('sendFreePush'));assert(html.includes('native?!!window.ChatMobile?.isRegistered?.()'));
 });
+test('Safari sign-in uses persistent storage fallbacks and keyboard-safe credentials',()=>{const theme=fs.readFileSync('pulze-theme.css','utf8');assert(html.includes('initializeAuth(app,{persistence:[indexedDBLocalPersistence,browserLocalPersistence,browserSessionPersistence]})'));assert(html.includes('autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email"'));assert(html.includes("document.getElementById('password').autocomplete=authMode==='signin'?'current-password':'new-password'"));assert(html.includes("event.key==='Enter'&&authMode==='signin'"));assert(theme.includes('body.auth-required .shell { height:auto!important'));assert(theme.includes('overflow:visible!important'));});
 test('opening a read chat does not create an endless read receipt loop',()=>{
  const start=html.lastIndexOf("markChatRead=function(chat)");
  const end=html.indexOf(';\nconst pulseRenderMessages',start);
