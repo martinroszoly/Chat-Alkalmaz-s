@@ -28,7 +28,27 @@ function database_(path,token){const response=UrlFetchApp.fetch(DATABASE_URL+'/'
 function writeDatabase_(path,value,token,method){const response=UrlFetchApp.fetch(DATABASE_URL+'/'+path+'.json?auth='+encodeURIComponent(token),{method:method||'put',contentType:'application/json',payload:value===null?'null':JSON.stringify(value),muteHttpExceptions:true});if(response.getResponseCode()>=300)throw new Error('Az értesítési eszköz mentése nem sikerült ('+response.getResponseCode()+')')}
 function adminWriteDatabase_(path,value,token,method){const response=UrlFetchApp.fetch(DATABASE_URL+'/'+path+'.json',{method:method||'put',headers:{Authorization:'Bearer '+token},contentType:'application/json',payload:value===null?'null':JSON.stringify(value),muteHttpExceptions:true});if(response.getResponseCode()>=300)throw new Error('Az értesítési eszköz törlése nem sikerült ('+response.getResponseCode()+')')}
 function compact_(value,max){return String(value||'').slice(0,max||1000)}
-function send_(uid,device,data,token){const response=UrlFetchApp.fetch('https://fcm.googleapis.com/v1/projects/'+PROJECT_ID+'/messages:send',{method:'post',contentType:'application/json',headers:{Authorization:'Bearer '+token},payload:JSON.stringify({message:{token:device.token,data:data,android:{priority:'high',ttl:(data.type==='call'||data.type==='call-ended')?'60s':'86400s'}}}),muteHttpExceptions:true});const text=response.getContentText();if(response.getResponseCode()>=300){if(/UNREGISTERED/.test(text)){adminWriteDatabase_('pushDevices/'+encodeURIComponent(uid)+'/'+encodeURIComponent(device.id),null,token,'delete');return}throw new Error('FCM küldési hiba: '+text.slice(0,500))}}
+function send_(uid,device,data,token){
+  const link='https://chat-alkalmazas-578c8.web.app/?'+(data.callId?'call='+encodeURIComponent(data.callId):'chat='+encodeURIComponent(data.chatId||''));
+  const pushData={...data};delete pushData.avatarData;
+  const webpush={headers:{Urgency:'high',TTL:(data.type==='call'||data.type==='call-ended')?'60':'86400'}};
+  if(data.type!=='call-ended'){
+    webpush.notification={
+      title:compact_(data.title,'Pulze-pro',80),
+      body:compact_(data.body,'Új üzenet',350),
+      icon:'https://chat-alkalmazas-578c8.web.app/icons/icon-192.png',
+      badge:'https://chat-alkalmazas-578c8.web.app/icons/badge.png',
+      tag:compact_(data.tag,'pulze-message',64),
+      data:{type:compact_(data.type,24),chatId:compact_(data.chatId,180),callId:compact_(data.callId,180),url:link},
+      ...(data.type==='call'?{require_interaction:true}:{})
+    };
+    webpush.fcm_options={link};
+  }
+  const message={token:device.token,data:pushData,android:{priority:'high',ttl:(data.type==='call'||data.type==='call-ended')?'60s':'86400s'},webpush:webpush};
+  const response=UrlFetchApp.fetch('https://fcm.googleapis.com/v1/projects/'+PROJECT_ID+'/messages:send',{method:'post',contentType:'application/json',headers:{Authorization:'Bearer '+token},payload:JSON.stringify({message}),muteHttpExceptions:true});
+  const text=response.getContentText();
+  if(response.getResponseCode()>=300){if(/UNREGISTERED/.test(text)){adminWriteDatabase_('pushDevices/'+encodeURIComponent(uid)+'/'+encodeURIComponent(device.id),null,token,'delete');return}throw new Error('FCM küldési hiba: '+text.slice(0,500))}
+}
 function devices_(uid,token){return Object.entries(database_('pushDevices/'+encodeURIComponent(uid),token)||{}).filter(([,d])=>(d.platform==='android'||d.platform==='web')&&typeof d.token==='string').map(([id,d])=>({id,token:d.token}))}
 function profile_(uid,token){return database_('publicProfiles/'+encodeURIComponent(uid),token)||{}}
 function notify_(event,uid){
@@ -46,7 +66,7 @@ function notify_(event,uid){
   const avatarData=typeof event.avatarData==='string'&&event.avatarData.indexOf('data:image/')===0&&event.avatarData.length<=2800?event.avatarData:'';
   if(event.kind==='message'){
     const chat=database_('conversations/'+encodeURIComponent(event.chatId),adminToken),message=chat&&chat.messages&&chat.messages[event.messageId];if(!chat||chat.members?.[uid]!==true||!message||message.senderUid!==uid)throw new Error('Az üzenet nem küldhető');
-    const profile=profile_(uid,adminToken),senderName=compact_(profile.username||message.senderName||'Felhasználó',80),group=chat.type==='group',data={type:'message',chatId:compact_(event.chatId,180),title:group?compact_(chat.name||'Csoport',80):senderName,body:compact_(message.text||'Fényképet küldött',350),senderName:senderName,isGroup:String(group),groupName:group?compact_(chat.name||'Csoport',80):'',tag:'pulse-messages',avatarData:avatarData};
+    const profile=profile_(uid,adminToken),senderName=compact_(profile.username||message.senderName||'Felhasználó',80),group=chat.type==='group',data={type:'message',chatId:compact_(event.chatId,180),title:group?compact_(chat.name||'Csoport',80):senderName,body:compact_(message.text||'Fényképet küldött',350),senderName:senderName,isGroup:String(group),groupName:group?compact_(chat.name||'Csoport',80):'',tag:'message-'+compact_(event.messageId,64),avatarData:avatarData};
     Object.keys(chat.members||{}).filter(id=>chat.members[id]===true&&id!==uid).forEach(id=>devices_(id,adminToken).forEach(d=>send_(id,d,data,adminToken)));return;
   }
   if(event.kind==='call-ended'){
