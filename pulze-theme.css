@@ -476,3 +476,12 @@ body:not(.auth-required) .admin-dialog > input {
   background: #171719 !important;
   border: 1px solid #514326 !important;
 }
+
+
+/* Safari visual viewport and keyboard safe auth scrolling. */
+html:has(body.auth-required), body.auth-required { height:auto!important; min-height:100svh!important; overflow-x:hidden!important; overflow-y:auto!important; }
+body.auth-required .shell { height:auto!important; min-height:100svh!important; overflow:visible!important; padding-top:env(safe-area-inset-top,0px); }
+body.auth-required .shell>.profile { height:auto!important; min-height:100svh!important; overflow:visible!important; padding-top:max(16px,env(safe-area-inset-top,0px))!important; padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important; }
+body.auth-required .profile-card { margin-block:0!important; scroll-margin-block:20px; }
+body.auth-required .field input { min-height:50px; font-size:16px; }
+@media(max-width:620px){body.auth-required .shell>.profile{align-items:start;place-items:start center;padding-inline:14px!important}body.auth-required .profile-card{width:100%}}
