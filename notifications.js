@@ -27,7 +27,11 @@
     if(typeof data?.token!=='string'||data.token.length<20)throw new Error('A telefon nem adott érvényes értesítési tokent');
     await window.chatFirebase.registerPushDevice({deviceId,...data});registered=true;
   }
+  function isIOS(){return /iPhone|iPad|iPod/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
+  function isStandalone(){return navigator.standalone===true||!!window.matchMedia?.('(display-mode: standalone)').matches;}
+  function needsIOSHomeScreen(){return isIOS()&&!isStandalone();}
   async function registerWeb(){
+    if(needsIOSHomeScreen())throw new Error('iPhone-on az értesítés csak a Főképernyőre telepített Pulze-pro alkalmazásban működik. Safari → Megosztás → Hozzáadás a Főképernyőhöz, majd ott kapcsold be.');
     const config=await fetch('./push-config.json',{cache:'no-store'}).then(r=>r.json());
     if(!config.vapidKey)throw new Error('A háttérértesítéshez még be kell állítani a Firebase webes push-kulcsot');
     const reg=await navigator.serviceWorker.register('./sw.js');await navigator.serviceWorker.ready;
@@ -83,6 +87,6 @@
   window.addEventListener('chat:native-token',e=>saveNativeToken(e.detail).catch(e=>toast('Az értesítés szerverregisztrációja nem sikerült: '+e.message)));
   window.addEventListener('chat:native-end',e=>{if(activePhoneCall?.id===e.detail.callId||pendingPhoneCall?.id===e.detail.callId)endPhoneCall();else openRoute({...e.detail,action:'decline'});});
   window.addEventListener('chat:native-push-error',e=>toast(e.detail.message||'Az értesítéseket nem sikerült regisztrálni'));
-  window.ChatMobile={enableNotifications,accountReady,beforeSignOut,alertMessage,alertCall,openRoute};
+  window.ChatMobile={enableNotifications,accountReady,beforeSignOut,alertMessage,alertCall,openRoute,needsIOSHomeScreen};
   window.ChatMobile.isRegistered=()=>registered;
 })();
