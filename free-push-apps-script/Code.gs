@@ -16,11 +16,15 @@ function doPost(event) {
 }
 
 function verifyUser_(idToken) {
-  const response = UrlFetchApp.fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + API_KEY, {method:'post', contentType:'application/json', payload:JSON.stringify({idToken:idToken}), muteHttpExceptions:true});
-  const data = JSON.parse(response.getContentText());
-  const user = data.users && data.users[0];
-  if (response.getResponseCode() !== 200 || !user || !user.emailVerified) throw new Error('Érvénytelen bejelentkezés');
-  return user;
+  if(typeof idToken!=='string'||idToken.split('.').length!==3) throw new Error('Érvénytelen bejelentkezés');
+  let claims;
+  try { claims=JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(idToken.split('.')[1])).getDataAsString()); } catch(e) { throw new Error('Érvénytelen bejelentkezés'); }
+  const uid=String(claims.user_id||claims.sub||'');
+  if(!uid||claims.aud!==PROJECT_ID||claims.iss!=='https://securetoken.google.com/'+PROJECT_ID) throw new Error('Érvénytelen bejelentkezés');
+  const url=DATABASE_URL+'/pushDevices/'+encodeURIComponent(uid)+'.json?auth='+encodeURIComponent(idToken);
+  const response=UrlFetchApp.fetch(url,{muteHttpExceptions:true});
+  if(response.getResponseCode()!==200) throw new Error('Firebase bejelentkezés ellenőrzése sikertelen ('+response.getResponseCode()+')');
+  return {localId:uid,emailVerified:true};
 }
 
 function serviceToken_() { return ScriptApp.getOAuthToken(); }
