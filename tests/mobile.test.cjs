@@ -57,7 +57,7 @@ test('gold-and-black pulsing theme loads app-wide and the push gateway has its R
  const theme=fs.readFileSync('pulze-theme.css','utf8'),manifest=JSON.parse(fs.readFileSync('free-push-apps-script/appsscript.json','utf8'));
  assert(html.indexOf('pulze-theme.css?v=8')<html.indexOf('<body'));
  assert(!html.includes('pulseAqua'));
- assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v12'));
+ assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v13'));
  assert(theme.includes('--pulze-gradient'));
  assert(theme.includes('body::before'));
  assert(theme.includes('animation: pulze-glow'));
@@ -140,5 +140,5 @@ test('iOS web push requires a Home Screen app and sends a visible FCM notificati
  assert(gateway.includes('webpush.fcm_options={link}'));
  assert(gateway.includes("tag:'message-'+compact_(event.messageId,64)"));
  assert(worker.includes('if(payload.notification)return'));
- assert(worker.includes('pulze-pro-shell-v12'));
+ assert(worker.includes('pulze-pro-shell-v13'));
 });
