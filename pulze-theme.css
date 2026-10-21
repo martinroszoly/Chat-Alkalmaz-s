@@ -25,6 +25,31 @@ body {
   background:
     radial-gradient(ellipse at 50% 45%, #11100d 0%, #0b0b0c 48%, #080809 100%) !important;
 }
+
+/* Keep the chat viewport inside the visible area when mobile keyboards open. */
+html, body { height: 100%; overflow: hidden; }
+#shell { height: var(--visual-height, 100dvh); min-height: 0; }
+#shell .chat, #shell .chat-body { min-height: 0; }
+@media (max-width: 620px) {
+  #shell.mobile-chat { height: var(--visual-height, 100dvh); }
+  #shell.mobile-chat .composer { padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+  #shell.mobile-chat .chat-body { overscroll-behavior: contain; }
+}
+
+.camera-modal { position: fixed; inset: 0; z-index: 10020; display: none; place-items: center; padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom)); background: #05070bee; }
+.camera-modal.open { display: grid; }
+.camera-panel { width: min(600px, 100%); height: min(820px, 100%); min-height: 320px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #493b22; border-radius: 20px; background: #101012; color: #f5f1e7; box-shadow: 0 18px 70px #000b; }
+.camera-panel header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; font-weight: 700; }
+.camera-panel header button, .camera-action { min-width: 44px; min-height: 44px; border: 0; border-radius: 50%; color: #fff; background: #29251d; font-size: 18px; cursor: pointer; }
+.camera-preview { flex: 1; min-height: 0; width: 100%; object-fit: contain; background: #050506; }
+.camera-actions { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 18px max(14px, env(safe-area-inset-bottom)); }
+.camera-action.capture { width: 62px; height: 62px; border: 4px solid #e8c76d; background: #fff; box-shadow: 0 0 0 4px #ffffff24; }
+.camera-action.send { width: 48px; height: 48px; background: #1684ff; }
+.camera-action:disabled { opacity: .45; cursor: wait; }
+.message-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; margin: 0 4px 1px; }
+.seen-receipt { display: block; margin: 0 0 0 auto; color: #b9b6ae; font-size: 10px; line-height: 1.2; text-align: right; }
+.message-video { display: block; width: min(100%, 320px); max-height: 420px; border-radius: 12px; background: #000; }
+#shell .chat[data-theme="dark"] .chat-body { background: radial-gradient(ellipse at 8% 8%, rgba(255, 206, 82, .07), transparent 36%), radial-gradient(ellipse at 92% 92%, rgba(212, 126, 23, .07), transparent 38%), linear-gradient(145deg, #101013, #171512 55%, #10100e); }
 body::before,
 body::after {
   content: "";
@@ -201,7 +226,7 @@ button:active { transform: scale(.98); }
 }
 .online { background: #82b978 !important; border-color: #171719 !important; }
 
-/* One consistent black-and-gold look for every conversation theme. */
+/* Keep the gold chat treatment on the default theme; selected themes can style their own surface. */
 #shell .chat[data-theme="dark"] { color: var(--ink) !important; background: #0b0b0d !important; }
 #shell .chat[data-theme="dark"] .chat-head {
   color: var(--ink) !important;
@@ -476,59 +501,3 @@ body:not(.auth-required) .admin-dialog > input {
   background: #171719 !important;
   border: 1px solid #514326 !important;
 }
-
-
-/* Safari visual viewport and keyboard safe auth scrolling. */
-html:has(body.auth-required), body.auth-required { height:auto!important; min-height:100svh!important; overflow-x:hidden!important; overflow-y:auto!important; }
-body.auth-required .shell { height:auto!important; min-height:100svh!important; overflow:visible!important; padding-top:env(safe-area-inset-top,0px); }
-body.auth-required .shell>.profile { height:auto!important; min-height:100svh!important; overflow:visible!important; padding-top:max(16px,env(safe-area-inset-top,0px))!important; padding-bottom:max(24px,env(safe-area-inset-bottom,0px))!important; }
-body.auth-required .profile-card { margin-block:0!important; scroll-margin-block:20px; }
-body.auth-required .field input { min-height:50px; font-size:16px; }
-@media(max-width:620px){body.auth-required .shell>.profile{align-items:start;place-items:start center;padding-inline:14px!important}body.auth-required .profile-card{width:100%}}
-
-/* Keep the installed iPhone app and message composer inside Safari's visible area
-   when the software keyboard opens. */
-@media (max-width: 620px) {
-  html, body:not(.auth-required) {
-    width: 100%;
-    height: 100%;
-    min-height: 0 !important;
-    overflow: hidden !important;
-    overscroll-behavior: none;
-  }
-  body:not(.auth-required) #shell.shell {
-    position: fixed !important;
-    inset: var(--visual-top, 0px) 0 auto !important;
-    width: 100% !important;
-    height: var(--visual-height, 100dvh) !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    overflow: hidden !important;
-  }
-  body:not(.auth-required) #shell.mobile-chat .chat {
-    display: flex !important;
-    min-width: 0;
-    min-height: 0 !important;
-    height: 100%;
-    overflow: hidden;
-    flex-direction: column;
-  }
-  body:not(.auth-required) #shell.mobile-chat .chat-body {
-    flex: 1 1 0;
-    min-height: 0 !important;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-  }
-  body:not(.auth-required) #shell.mobile-chat .composer {
-    position: relative;
-    flex: 0 0 auto;
-    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
-  }
-  body:not(.auth-required) #shell.mobile-chat .compose-input {
-    min-height: 44px;
-    font-size: 16px;
-  }
-}
-
-.read-receipt{align-self:flex-end;margin:-9px 5px 0;color:#b8a76e;font-size:10px;opacity:.82}

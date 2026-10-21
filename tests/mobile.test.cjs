@@ -50,19 +50,19 @@ test('granted web push permission re-registers the device on startup',async()=>{
  const {context,w,dom}=fixture();let saved=null;const registration={};context.firebaseUser={uid:'me',emailVerified:true};context.window={addEventListener:()=>{},updateNotificationSetting:()=>{},chatFirebase:{registerPushDevice:async data=>{saved=data;return true},enableWebPush:async()=> 'fcm-token-01234567890123456789'}};context.crypto=require('node:crypto').webcrypto;context.location={href:'https://example.test/'};context.URL=URL;context.Notification={permission:'granted'};context.window.Notification=context.Notification;context.navigator={serviceWorker:{register:async()=>registration,ready:Promise.resolve(registration),addEventListener:()=>{}}};context.fetch=async()=>({json:async()=>({vapidKey:'public-vapid-key'})});vm.runInContext(fs.readFileSync('notifications.js','utf8'),context);await context.window.ChatMobile.accountReady(context.firebaseUser);assert.equal(saved?.platform,'web');assert.equal(saved?.token,'fcm-token-01234567890123456789');assert.equal(w.localStorage.getItem('messageNotifications'),'true');assert.equal(context.window.ChatMobile.isRegistered(),true);dom.window.close();
 });
 test('service worker focuses an existing app and sends the exact route',async()=>{
- const handlers={},events=[];const ctx=vm.createContext({self:{addEventListener:(n,f)=>handlers[n]=f,registration:{scope:'https://example.test/Chat-Alkalmaz-s/'},location:{origin:'https://example.test'},clients:{matchAll:async()=>[{url:'https://example.test/Chat-Alkalmaz-s/',postMessage:d=>events.push(d),focus:async()=>events.push('focus')}]}},URL,importScripts:()=>{},firebase:{initializeApp:()=>{},messaging:()=>({onBackgroundMessage:()=>{}})}});
- vm.runInContext(fs.readFileSync('sw.js','utf8'),ctx);let wait;handlers.notificationclick({notification:{close:()=>{},data:{chatId:'one'}},waitUntil:p=>wait=p});await wait;assert.equal(events[0].chatId,'one');assert.equal(events[1],'focus');
+ const handlers={},events=[];const ctx=vm.createContext({self:{addEventListener:(n,f)=>handlers[n]=f,registration:{scope:'https://example.test/Chat-Alkalmaz-s/',getNotifications:async()=>[]},location:{origin:'https://example.test'},clients:{matchAll:async()=>[{url:'https://example.test/Chat-Alkalmaz-s/',postMessage:d=>events.push(d),focus:async()=>events.push('focus')}]}},URL,importScripts:()=>{},firebase:{initializeApp:()=>{},messaging:()=>({onBackgroundMessage:()=>{}})}});
+ vm.runInContext(fs.readFileSync('sw.js','utf8'),ctx);let wait;handlers.notificationclick({notification:{close:()=>{},data:{chatId:'one'}},waitUntil:p=>wait=p});await wait;assert.equal(events[0].type,'clear-chat-notifications');assert.equal(events[1].chatId,'one');assert.equal(events[2],'focus');
 });
 test('gold-and-black pulsing theme loads app-wide and the push gateway has its RTDB identity scope',()=>{
  const theme=fs.readFileSync('pulze-theme.css','utf8'),manifest=JSON.parse(fs.readFileSync('free-push-apps-script/appsscript.json','utf8'));
- assert(html.indexOf('pulze-theme.css?v=9')<html.indexOf('<body'));
+ assert(html.indexOf('pulze-theme.css?v=10')<html.indexOf('<body'));
  assert(!html.includes('pulseAqua'));
- assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v14'));
+ assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v15'));
  assert(theme.includes('--pulze-gradient'));
  assert(theme.includes('body::before'));
  assert(theme.includes('animation: pulze-glow'));
  assert(theme.includes('#shell .chat[data-theme="dark"] .chat-body'));
- assert(!theme.includes('#shell .chat[data-theme] .chat-body'));
+ assert(!theme.includes('#shell .chat[data-theme] .chat-body'));assert(theme.includes('#shell .chat[data-theme="dark"] .chat-body')); 
  assert(!theme.includes('#e843b5'));
  assert(manifest.oauthScopes.includes('https://www.googleapis.com/auth/userinfo.email'));
  assert(manifest.oauthScopes.includes('https://www.googleapis.com/auth/firebase.database'));
@@ -75,14 +75,14 @@ test('mobile headers respect camera safe areas and notification reads use server
  assert(gateway.includes("d.platform==='android'||d.platform==='web'"));
  assert(gateway.includes('devices_(id,adminToken)'));
  assert(html.includes('read-receipt'));
- assert(html.includes('updatedAt:entries.length'));
+ assert(html.includes('lastActivityAt:Number(entries.at(-1)?.[1]?.createdAt)||0'));
 });
 test('profile login sync preserves gallery, and push tokens can only be written by their owner',()=>{
  assert(html.includes('publishPublicProfile(user,{...data,username,avatar})'));
  const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;assert.equal(rules.pushDevices['.read'],false);assert.equal(rules.pushDevices['.write'],false);assert(rules.pushDevices.$uid['.read'].includes('auth.uid === $uid'));assert(!rules.pushDevices.$uid['.read'].includes("root.child('friends')"));assert(rules.pushDevices.$uid.$deviceId['.write'].includes('auth.uid === $uid'));assert(rules.pushDevices.$uid.$deviceId['.validate'].includes("'android'"));assert.equal(rules.serverConfig['.read'],false);
- const register=html.slice(html.indexOf(' registerPushDevice:'),html.indexOf(' getCallIceServers:'));assert(register.includes('callAdmin("registerPushDevice"'));assert(register.includes('callAdmin("unregisterPushDevice"'));assert(!register.includes('set(ref(db,path)'));assert(!register.includes('sendFreePush'));assert(html.includes('permission&&registered'));assert(html.includes('registered=!!window.ChatMobile?.isRegistered?.()'));
+ const register=html.slice(html.indexOf(' registerPushDevice:'),html.indexOf(' getCallIceServers:'));assert(register.includes('sendFreePush("register"'));assert(register.includes('sendFreePush("unregister"'));assert(!register.includes('set(ref(db,path)'));assert(!register.includes('remove(ref(db,"pushDevices/"'));assert(fs.readFileSync('free-push-apps-script/Code.gs','utf8').includes('adminWriteDatabase_'));assert(fs.readFileSync('notifications.js','utf8').includes('window.ChatMobile.isRegistered=()=>registered'));assert(html.includes('updateNotificationSetting')); 
 });
-test('Safari sign-in uses persistent storage fallbacks and keyboard-safe credentials',()=>{const theme=fs.readFileSync('pulze-theme.css','utf8');assert(html.includes('initializeAuth(app,{persistence:[indexedDBLocalPersistence,browserLocalPersistence,browserSessionPersistence]})'));assert(html.includes('autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email"'));assert(html.includes("document.getElementById('password').autocomplete=authMode==='signin'?'current-password':'new-password'"));assert(html.includes("event.key==='Enter'&&authMode==='signin'"));assert(theme.includes('body.auth-required .shell { height:auto!important'));assert(theme.includes('overflow:visible!important'));});
+test('Safari sign-in uses persistent storage fallbacks and keyboard-safe credentials',()=>{const theme=fs.readFileSync('pulze-theme.css','utf8');assert(html.includes('initializeAuth(app,{persistence:[indexedDBLocalPersistence,browserLocalPersistence,browserSessionPersistence]})'));assert(html.includes('autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email"'));assert(html.includes("document.getElementById('password').autocomplete=authMode==='signin'?'current-password':'new-password'"));assert(html.includes("event.key==='Enter'&&authMode==='signin'"));assert(theme.includes('#shell { height: var(--visual-height, 100dvh)'));assert(theme.includes('overscroll-behavior: contain')); });
 test('opening a read chat does not create an endless read receipt loop',()=>{
  const start=html.lastIndexOf("markChatRead=function(chat)");
  const end=html.indexOf(';\nconst pulseRenderMessages',start);
@@ -144,6 +144,41 @@ test('iOS web push requires a Home Screen app and sends a visible FCM notificati
  assert(gateway.includes('webpush.fcm_options={link}'));
  assert(gateway.includes("tag:'message-'+compact_(event.messageId,64)"));
  assert(worker.includes('if(payload.notification)return'));
- assert(worker.includes('clear-chat-notifications'));
- assert(worker.includes('pulze-pro-shell-v14'));
+ assert(worker.includes('clear-chat-notifications'));assert(worker.includes('if(payload.notification)return'));
+ assert(worker.includes('pulze-pro-shell-v15'));
+});
+
+test('chat list sorts by latest activity and camera supports retake plus video picker',()=>{
+ const {context,w,dom}=fixture();context.chats=[
+  {id:'old',name:'Régi',lastActivityAt:100,messages:[]},
+  {id:'new',name:'Friss',lastActivityAt:300,messages:[]},
+  {id:'middle',name:'Köztes',lastActivityAt:200,messages:[]}
+ ];context.filter='all';context.esc=String;
+ const listSource=html.slice(html.indexOf('function renderList(){'),html.indexOf('function messageAvatarHTML'));
+ vm.runInContext(listSource,context);vm.runInContext('renderList()',context);
+ assert.deepEqual([...w.document.querySelectorAll('.person-name')].map(el=>el.textContent),['Friss','Köztes','Régi']);
+ assert(html.includes('accept="image/*,video/*"'));assert(html.includes('navigator.mediaDevices.getUserMedia'));
+ assert(html.includes('audio:false'));assert(html.includes('function captureCameraPhoto()'));
+ assert(html.includes('function resetCameraPreview()'));assert(html.includes('function sendCameraPhoto()'));
+ dom.window.close();
+});
+
+test('sent read receipts appear only below a read last message and videos render with controls',()=>{
+ const {context,w,dom}=fixture();context.chats=[{id:'one',name:'Anna',remote:true,group:false,messages:[
+  ['mine','', '12:00',0,'',0,false,'v','me','data:video/mp4;base64,AA==','Me',200,true,'video']
+ ]}];
+ Object.assign(context,{expiryTimeout:null,renderList:()=>{},persist:()=>{},getChatTheme:()=> 'dark',isGroupCreator:()=>false,messageAvatarHTML:()=>'',esc:s=>String(s),markChatRead:()=>{}});
+ const source=html.slice(html.indexOf('function renderMessages(){'),html.indexOf('function selectChat('));vm.runInContext(source,context);vm.runInContext('renderMessages()',context);
+ assert.equal(w.document.querySelector('video.message-video')?.getAttribute('controls'), '');
+ assert.equal(w.document.querySelector('.read-receipt')?.textContent,'Láttam');
+ context.chats[0].messages.push(['received','Új üzenet','12:01',0,'',0,false,'r','peer','', 'Anna',300,true,'']);
+ vm.runInContext('renderMessages()',context);assert.equal(w.document.querySelector('.read-receipt'),null);
+ dom.window.close();
+});
+
+test('push gateway validates Firebase ID tokens through Identity Toolkit and writes private device records with server scope',()=>{
+ const gateway=fs.readFileSync('free-push-apps-script/Code.gs','utf8');
+ assert(gateway.includes('identitytoolkit.googleapis.com/v1/accounts:lookup'));
+ assert(gateway.includes('adminWriteDatabase_(\'pushDevices/'));
+ assert(!gateway.includes("pushDevices/'+encodeURIComponent(uid)+'.json?auth="));
 });

@@ -16,22 +16,25 @@ function doPost(event) {
 }
 
 function verifyUser_(idToken) {
-  if(typeof idToken!=='string'||idToken.split('.').length!==3) throw new Error('Érvénytelen bejelentkezés');
-  let claims;
-  try { claims=JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(idToken.split('.')[1])).getDataAsString()); } catch(e) { throw new Error('Érvénytelen bejelentkezés'); }
-  const uid=String(claims.user_id||claims.sub||'');
-  if(!uid||claims.aud!==PROJECT_ID||claims.iss!=='https://securetoken.google.com/'+PROJECT_ID) throw new Error('Érvénytelen bejelentkezés');
-  const url=DATABASE_URL+'/pushDevices/'+encodeURIComponent(uid)+'.json?auth='+encodeURIComponent(idToken);
-  const response=UrlFetchApp.fetch(url,{muteHttpExceptions:true});
+  if(typeof idToken!=='string'||idToken.length<100) throw new Error('Érvénytelen bejelentkezés');
+  // Ask Firebase Authentication to validate the ID token. pushDevices is
+  // intentionally unreadable to clients, so using an RTDB read here returns
+  // 401 even for a valid signed-in user.
+  const response=UrlFetchApp.fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key='+encodeURIComponent(API_KEY),{
+    method:'post',contentType:'application/json',payload:JSON.stringify({idToken:idToken}),muteHttpExceptions:true
+  });
   if(response.getResponseCode()!==200) throw new Error('Firebase bejelentkezés ellenőrzése sikertelen ('+response.getResponseCode()+')');
-  return {localId:uid,emailVerified:true};
+  let result;
+  try { result=JSON.parse(response.getContentText()).users?.[0]; } catch(e) { throw new Error('A Firebase bejelentkezés válasza érvénytelen'); }
+  if(!result?.localId||result.emailVerified!==true) throw new Error('Jelentkezz be megerősített fiókkal');
+  return {localId:String(result.localId),emailVerified:true,email:String(result.email||'')};
 }
 
 function serviceToken_() { return ScriptApp.getOAuthToken(); }
 function database_(path,token){const response=UrlFetchApp.fetch(DATABASE_URL+'/'+path+'.json',{headers:{Authorization:'Bearer '+token},muteHttpExceptions:true});if(response.getResponseCode()!==200){console.error('Realtime Database read failed',response.getResponseCode(),response.getContentText().slice(0,500));throw new Error('Adatbázis hiba ('+response.getResponseCode()+')')}return JSON.parse(response.getContentText())}
 function writeDatabase_(path,value,token,method){const response=UrlFetchApp.fetch(DATABASE_URL+'/'+path+'.json?auth='+encodeURIComponent(token),{method:method||'put',contentType:'application/json',payload:value===null?'null':JSON.stringify(value),muteHttpExceptions:true});if(response.getResponseCode()>=300)throw new Error('Az értesítési eszköz mentése nem sikerült ('+response.getResponseCode()+')')}
 function adminWriteDatabase_(path,value,token,method){const response=UrlFetchApp.fetch(DATABASE_URL+'/'+path+'.json',{method:method||'put',headers:{Authorization:'Bearer '+token},contentType:'application/json',payload:value===null?'null':JSON.stringify(value),muteHttpExceptions:true});if(response.getResponseCode()>=300)throw new Error('Az értesítési eszköz törlése nem sikerült ('+response.getResponseCode()+')')}
-function compact_(value,max){return String(value||'').slice(0,max||1000)}
+function compact_(value,fallback,max){if(typeof fallback==='number'){max=fallback;fallback=''}return String(value||fallback||'').slice(0,max||1000)}
 function send_(uid,device,data,token){
   const link='https://chat-alkalmazas-578c8.web.app/?'+(data.callId?'call='+encodeURIComponent(data.callId):'chat='+encodeURIComponent(data.chatId||''));
   const pushData={...data};delete pushData.avatarData;
@@ -61,16 +64,16 @@ function notify_(event,uid){
   const token=event.authToken,adminToken=serviceToken_();
   if(event.kind==='register'){
     if((event.platform!=='android'&&event.platform!=='web')||typeof event.deviceId!=='string'||typeof event.token!=='string'||event.deviceId.length<8||event.token.length<20)throw new Error('Érvénytelen értesítési eszköz');
-    writeDatabase_('pushDevices/'+encodeURIComponent(uid)+'/'+encodeURIComponent(event.deviceId),{platform:event.platform,token:event.token,updatedAt:Date.now()},token);return;
+    adminWriteDatabase_('pushDevices/'+encodeURIComponent(uid)+'/'+encodeURIComponent(event.deviceId),{platform:event.platform,token:event.token,updatedAt:Date.now()},adminToken);return;
   }
   if(event.kind==='unregister'){
     if(typeof event.deviceId!=='string'||event.deviceId.length<8)throw new Error('Érvénytelen értesítési eszköz');
-    writeDatabase_('pushDevices/'+encodeURIComponent(uid)+'/'+encodeURIComponent(event.deviceId),null,token,'delete');return;
+    adminWriteDatabase_('pushDevices/'+encodeURIComponent(uid)+'/'+encodeURIComponent(event.deviceId),null,adminToken,'delete');return;
   }
   const avatarData=typeof event.avatarData==='string'&&event.avatarData.indexOf('data:image/')===0&&event.avatarData.length<=2800?event.avatarData:'';
   if(event.kind==='message'){
     const chat=database_('conversations/'+encodeURIComponent(event.chatId),adminToken),message=chat&&chat.messages&&chat.messages[event.messageId];if(!chat||chat.members?.[uid]!==true||!message||message.senderUid!==uid)throw new Error('Az üzenet nem küldhető');
-    const profile=profile_(uid,adminToken),senderName=compact_(profile.username||message.senderName||'Felhasználó',80),group=chat.type==='group',data={type:'message',chatId:compact_(event.chatId,180),title:group?compact_(chat.name||'Csoport',80):senderName,body:compact_(message.text||'Fényképet küldött',350),senderName:senderName,isGroup:String(group),groupName:group?compact_(chat.name||'Csoport',80):'',tag:'message-'+compact_(event.messageId,64),avatarData:avatarData};
+    const profile=profile_(uid,adminToken),senderName=compact_(profile.username||message.senderName||'Felhasználó',80),group=chat.type==='group',data={type:'message',chatId:compact_(event.chatId,180),title:group?compact_(chat.name||'Csoport',80):senderName,body:compact_(message.text||(message.mediaType==='video'?'Videót küldött':'Fényképet küldött'),350),senderName:senderName,isGroup:String(group),groupName:group?compact_(chat.name||'Csoport',80):'',tag:'message-'+compact_(event.messageId,64),avatarData:avatarData};
     Object.keys(chat.members||{}).filter(id=>chat.members[id]===true&&id!==uid).forEach(id=>devices_(id,adminToken).forEach(d=>send_(id,d,data,adminToken)));return;
   }
   if(event.kind==='call-ended'){

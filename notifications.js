@@ -25,23 +25,20 @@
   async function saveNativeToken(data){
     if(!firebaseUser?.emailVerified)return;
     if(typeof data?.token!=='string'||data.token.length<20)throw new Error('A telefon nem adott érvényes értesítési tokent');
-    await window.chatFirebase.registerPushDevice({deviceId,...data});registered=true;window.updateNotificationSetting?.();
+    await window.chatFirebase.registerPushDevice({deviceId,...data});registered=true;
   }
-  function isIOS(){return /iPhone|iPad|iPod/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
-  function isStandalone(){return navigator.standalone===true||!!window.matchMedia?.('(display-mode: standalone)').matches;}
-  function needsIOSHomeScreen(){return isIOS()&&!isStandalone();}
   async function registerWeb(){
-    if(needsIOSHomeScreen())throw new Error('iPhone-on az értesítés csak a Főképernyőre telepített Pulze-pro alkalmazásban működik. Safari → Megosztás → Hozzáadás a Főképernyőhöz, majd ott kapcsold be.');
     const config=await fetch('./push-config.json',{cache:'no-store'}).then(r=>r.json());
     if(!config.vapidKey)throw new Error('A háttérértesítéshez még be kell állítani a Firebase webes push-kulcsot');
     const reg=await navigator.serviceWorker.register('./sw.js');await navigator.serviceWorker.ready;
     const token=await window.chatFirebase.enableWebPush(reg,config.vapidKey);
     await saveNativeToken({token,platform:'web'});
   }
+  function needsIOSHomeScreen(){const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent)||navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1;return ios&&!window.navigator.standalone&&!window.matchMedia?.('(display-mode: standalone)').matches&&window.ChatNative?.platform!=='ios';}
   async function enableNotifications(){
     try{
+      if(needsIOSHomeScreen())throw new Error('iPhone-on előbb add a Pulze-pro alkalmazást a Főképernyőhöz: Safari → Megosztás → Hozzáadás a Főképernyőhöz.');
       if(!firebaseUser?.emailVerified)throw new Error('Az értesítésekhez jelentkezz be');
-      if(!window.ChatNative?.isNative&&needsIOSHomeScreen())throw new Error('iPhone-on az értesítés csak a Főképernyőre telepített Pulze-pro alkalmazásban működik. Safari → Megosztás → Hozzáadás a Főképernyőhöz, majd a Főképernyőn nyisd meg és kapcsold be.');
       if(window.ChatNative?.isNative){const token=await window.ChatNative.phone.registerPush();await saveNativeToken(token);}
       else{
         if(!('Notification'in window))throw new Error('Ezen a böngészőn nem támogatott az értesítés');
@@ -51,7 +48,7 @@
       localStorage.setItem('messageNotifications','true');updateNotificationSetting();
       if(window.ChatNative?.isNative){document.getElementById('notificationToggle').classList.add('on');document.getElementById('notificationStatus').textContent='Bekapcsolva · telefonos értesítések';}
       toast('Értesítési engedély megadva');
-    }catch(e){registered=false;localStorage.removeItem('messageNotifications');updateNotificationSetting();toast(e.message||'Nem sikerült bekapcsolni az értesítéseket');}
+    }catch(e){if(window.ChatNative?.isNative){registered=false;localStorage.removeItem('messageNotifications');updateNotificationSetting();}toast(e.message||'Nem sikerült bekapcsolni az értesítéseket');}
   }
   function beep(){
     try{const ctx=new(window.AudioContext||window.webkitAudioContext)(),o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=880;g.gain.setValueAtTime(.08,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.18);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.2);o.onended=()=>ctx.close();}catch{}
@@ -76,9 +73,8 @@
     if(window.ChatNative?.isNative){
       try{const token=await window.ChatNative.phone.registerPush();await saveNativeToken(token);localStorage.setItem('messageNotifications','true');updateNotificationSetting();}catch(e){registered=false;localStorage.removeItem('messageNotifications');updateNotificationSetting();console.warn('Push registration pending',e);toast('Android értesítésregisztráció sikertelen: '+(e?.message||'ellenőrizd az értesítési engedélyt'));}
     }else if('Notification'in window&&Notification.permission==='granted'){
-      try{await registerWeb();localStorage.setItem('messageNotifications','true');window.updateNotificationSetting?.();}
-      catch(e){registered=false;localStorage.removeItem('messageNotifications');window.updateNotificationSetting?.();console.warn('Push registration pending',e);toast(e?.message||'Az iPhone értesítése nincs regisztrálva');}
-    }else{registered=false;window.updateNotificationSetting?.();}
+      try{await registerWeb();localStorage.setItem('messageNotifications','true');window.updateNotificationSetting?.();}catch(e){console.warn('Push registration pending',e);}
+    }
   }
   async function beforeSignOut(){
     if(firebaseUser?.uid)await window.chatFirebase.unregisterPushDevice({deviceId});
