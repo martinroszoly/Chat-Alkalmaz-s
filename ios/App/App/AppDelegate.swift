@@ -43,7 +43,8 @@ public class ChatPhonePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "setSpeaker", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "startRingtone", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "stopRingtone", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "setSession", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "setSession", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "clearChatNotifications", returnType: CAPPluginReturnPromise)
     ]
     public override func load() { ChatPhoneManager.shared.plugin = self }
     func emit(_ name: String, _ data: [String: Any]) { notifyListeners(name, data: data, retainUntilConsumed: true) }
@@ -93,6 +94,14 @@ public class ChatPhonePlugin: CAPPlugin, CAPBridgedPlugin {
             try session.overrideOutputAudioPort(call.getBool("enabled") == true ? .speaker : .none)
             call.resolve()
         }catch{call.reject(error.localizedDescription)}
+    }
+    @objc func clearChatNotifications(_ call: CAPPluginCall) {
+        guard let chatId=call.getString("chatId") else {call.reject("Hiányzó beszélgetésazonosító");return}
+        UNUserNotificationCenter.current().getDeliveredNotifications { items in
+            let ids=items.filter { ($0.request.content.userInfo["chatId"] as? String)==chatId }.map { $0.request.identifier }
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers:ids)
+            call.resolve()
+        }
     }
     @objc func setSession(_ call: CAPPluginCall) {ChatPhoneManager.shared.idToken=call.getString("idToken");call.resolve()}
     // CallKit uses the device's default system ringtone for incoming calls.

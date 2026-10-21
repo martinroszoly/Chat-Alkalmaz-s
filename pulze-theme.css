@@ -202,20 +202,20 @@ button:active { transform: scale(.98); }
 .online { background: #82b978 !important; border-color: #171719 !important; }
 
 /* One consistent black-and-gold look for every conversation theme. */
-#shell .chat[data-theme] { color: var(--ink) !important; background: #0b0b0d !important; }
-#shell .chat[data-theme] .chat-head {
+#shell .chat[data-theme="dark"] { color: var(--ink) !important; background: #0b0b0d !important; }
+#shell .chat[data-theme="dark"] .chat-head {
   color: var(--ink) !important;
   background: linear-gradient(105deg, #111113, #19150e 55%, #111113) !important;
   border-bottom: 1px solid #493b22 !important;
 }
-#shell .chat[data-theme] .chat-head #chatName { color: #f7f2e7 !important; }
-#shell .chat[data-theme] .chat-head #chatStatus { color: #bca66f !important; }
-#shell .chat[data-theme] .chat-head .tool {
+#shell .chat[data-theme="dark"] .chat-head #chatName { color: #f7f2e7 !important; }
+#shell .chat[data-theme="dark"] .chat-head #chatStatus { color: #bca66f !important; }
+#shell .chat[data-theme="dark"] .chat-head .tool {
   color: #f0bf4b !important;
   background: #1b1a18 !important;
   border: 1px solid #594624 !important;
 }
-#shell .chat[data-theme] .chat-body {
+#shell .chat[data-theme="dark"] .chat-body {
   position: relative;
   isolation: isolate;
   background:
@@ -225,7 +225,7 @@ button:active { transform: scale(.98); }
   background-position: center !important;
   background-size: auto !important;
 }
-#shell .chat[data-theme] .chat-body::before {
+#shell .chat[data-theme="dark"] .chat-body::before {
   content: "" !important;
   position: absolute !important;
   inset: 0 !important;
@@ -236,33 +236,33 @@ button:active { transform: scale(.98); }
     radial-gradient(ellipse 30% 22% at 86% 83%, rgba(209, 133, 30, .04), transparent 75%) !important;
   animation: pulze-chat-glow 26s ease-in-out infinite alternate !important;
 }
-#shell .chat[data-theme] .chat-body > * { position: relative; z-index: 1; }
+#shell .chat[data-theme="dark"] .chat-body > * { position: relative; z-index: 1; }
 @keyframes pulze-chat-glow { from { opacity: .5; } to { opacity: 1; } }
-#shell .chat[data-theme] .msg-row:not(.mine) .bubble {
+#shell .chat[data-theme="dark"] .msg-row:not(.mine) .bubble {
   color: #f1eee6 !important;
   background: #1a1a1c !important;
   border: 1px solid #352d20 !important;
   box-shadow: 0 3px 14px rgba(0, 0, 0, .18) !important;
 }
-#shell .chat[data-theme] .msg-row.mine .bubble {
+#shell .chat[data-theme="dark"] .msg-row.mine .bubble {
   color: #1a1307 !important;
   background: var(--pulze-gradient) !important;
   border: 1px solid #e7b43a !important;
   box-shadow: 0 4px 14px rgba(213, 139, 25, .13) !important;
 }
-#shell .chat[data-theme] .composer {
+#shell .chat[data-theme="dark"] .composer {
   color: var(--ink) !important;
   background: #111113 !important;
   border-top: 1px solid #493b22 !important;
 }
-#shell .chat[data-theme] .composer .compose-btn { color: #dcb84f !important; }
-#shell .chat[data-theme] .compose-input {
+#shell .chat[data-theme="dark"] .composer .compose-btn { color: #dcb84f !important; }
+#shell .chat[data-theme="dark"] .compose-input {
   color: #f5f1e7 !important;
   background: #1a1918 !important;
   border: 1px solid #4d3e22 !important;
 }
-#shell .chat[data-theme] .compose-input::placeholder { color: #9a907b !important; }
-#shell .chat[data-theme] .composer .send {
+#shell .chat[data-theme="dark"] .compose-input::placeholder { color: #9a907b !important; }
+#shell .chat[data-theme="dark"] .composer .send {
   color: #1a1307 !important;
   background: var(--pulze-gradient) !important;
 }
@@ -456,12 +456,12 @@ body:not(.auth-required) #shell .settings-card select {
   background: #171719 !important;
   border-color: #514326 !important;
 }
-body:not(.auth-required) #shell .chat[data-theme] .composer .compose-input {
+body:not(.auth-required) #shell .chat[data-theme="dark"] .composer .compose-input {
   color: #f5f1e7 !important;
   background: #1a1918 !important;
   border: 1px solid #4d3e22 !important;
 }
-body:not(.auth-required) #shell .chat[data-theme] .composer .send {
+body:not(.auth-required) #shell .chat[data-theme="dark"] .composer .send {
   color: #191307 !important;
   background: var(--pulze-gradient) !important;
 }
@@ -530,3 +530,5 @@ body.auth-required .field input { min-height:50px; font-size:16px; }
     font-size: 16px;
   }
 }
+
+.read-receipt{align-self:flex-end;margin:-9px 5px 0;color:#b8a76e;font-size:10px;opacity:.82}

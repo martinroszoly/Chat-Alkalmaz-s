@@ -1,5 +1,5 @@
-const CACHE='pulze-pro-shell-v13';
-const SHELL=['./','./manifest.json','./icon.svg','./pulze-theme.css?v=9','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png','./icons/apple-touch-icon.png','./calls.js','./notifications.js','./mobile-bridge.js'];
+const CACHE='pulze-pro-shell-v14';
+const SHELL=['./','./manifest.json','./icon.svg','./pulze-theme.css?v=10','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png','./icons/apple-touch-icon.png','./calls.js','./notifications.js','./mobile-bridge.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
@@ -24,3 +24,5 @@ firebase.messaging().onBackgroundMessage(payload=>{
   if(d.type==='call-ended')return self.registration.getNotifications({tag:'call-'+d.callId}).then(items=>items.forEach(n=>n.close()));
   return self.registration.showNotification(d.title||'Pulze-pro',{body:(d.isGroup==='true'?d.senderName+'\n':'')+(d.body||'Új üzenet'),icon:d.avatarUrl||'./icons/icon-192.png',badge:'./icons/badge.png',tag:d.tag,requireInteraction:d.type==='call',vibrate:d.type==='call'?[300,100,300,100,300]:[120],data:{chatId:d.chatId,callId:d.callId,url:d.type==='call'?'./?call='+encodeURIComponent(d.callId):'./?chat='+encodeURIComponent(d.chatId)}});
 });
+
+self.addEventListener('message',e=>{if(e.data?.type==='clear-chat-notifications'&&e.data.chatId){const chatId=e.data.chatId;e.waitUntil(self.registration.getNotifications().then(items=>items.filter(n=>n.data?.chatId===chatId).forEach(n=>n.close())));}});

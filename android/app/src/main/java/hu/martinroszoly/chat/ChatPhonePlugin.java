@@ -35,6 +35,13 @@ public class ChatPhonePlugin extends Plugin {
     @PluginMethod public void getPendingAction(PluginCall call){JSObject data=route(getActivity().getIntent());getActivity().getIntent().removeExtra("chatId");getActivity().getIntent().removeExtra("callId");getActivity().getIntent().removeExtra("action");call.resolve(data);}
     static JSObject route(Intent i){JSObject data=new JSObject();if(i!=null)for(String k:new String[]{"chatId","callId","action"})if(i.hasExtra(k))data.put(k,i.getStringExtra(k));return data;}
     @Override protected void handleOnNewIntent(Intent i){getActivity().setIntent(i);notifyListeners("notificationAction",route(i),true);}
+    @PluginMethod public void clearChatNotifications(PluginCall call){
+        String chatId=call.getString("chatId","");
+        if(chatId.isEmpty()){call.reject("Hiányzó beszélgetésazonosító");return;}
+        android.app.NotificationManager manager=getContext().getSystemService(android.app.NotificationManager.class);
+        if(Build.VERSION.SDK_INT>=23){for(android.service.notification.StatusBarNotification item:manager.getActiveNotifications())if(("pulze-chat-"+chatId).equals(item.getNotification().getGroup()))manager.cancel(item.getId());}
+        call.resolve();
+    }
     @PluginMethod public void reportIncomingCall(PluginCall call){String id=call.getString("callId","");ChatNotifications.incoming(getContext(),id,call.getString("name","Ismerős"),call.getLong("expiresAt",System.currentTimeMillis()+60000),null);call.resolve();}
     @PluginMethod public void startCall(PluginCall call){startOngoing(call);}
     @PluginMethod public void acceptCall(PluginCall call){stopRingtoneNow();ChatNotifications.cancel(getContext(),call.getString("callId",""));startOngoing(call);}

@@ -34,7 +34,7 @@ public class ChatNotifications {
         NotificationCompat.MessagingStyle style=new NotificationCompat.MessagingStyle(new Person.Builder().setName("Te").build()).setGroupConversation(group).addMessage(d.getOrDefault("body",""),System.currentTimeMillis(),sender.build());
         if(group)style.setConversationTitle(d.getOrDefault("groupName","Csoport"));
         PendingIntent open=route(c,d.get("chatId"),null,"open");
-        NotificationCompat.Builder b=new NotificationCompat.Builder(c,MESSAGES).setSmallIcon(R.drawable.ic_notification).setContentTitle(d.get("title")).setContentText(d.get("body")).setStyle(style).setContentIntent(open).setAutoCancel(true).setCategory(NotificationCompat.CATEGORY_MESSAGE).setPriority(NotificationCompat.PRIORITY_HIGH).addAction(0,"Chat megnyitása",open);
+        NotificationCompat.Builder b=new NotificationCompat.Builder(c,MESSAGES).setSmallIcon(R.drawable.ic_notification).setContentTitle(d.get("title")).setContentText(d.get("body")).setStyle(style).setContentIntent(open).setAutoCancel(true).setGroup("pulze-chat-"+d.getOrDefault("chatId","unknown")).setCategory(NotificationCompat.CATEGORY_MESSAGE).setPriority(NotificationCompat.PRIORITY_HIGH).addAction(0,"Chat megnyitása",open);
         if(avatar!=null)b.setLargeIcon(avatar);
         c.getSystemService(NotificationManager.class).notify(id(d.getOrDefault("tag","pulse-messages")),b.build());
     }

@@ -55,12 +55,14 @@ test('service worker focuses an existing app and sends the exact route',async()=
 });
 test('gold-and-black pulsing theme loads app-wide and the push gateway has its RTDB identity scope',()=>{
  const theme=fs.readFileSync('pulze-theme.css','utf8'),manifest=JSON.parse(fs.readFileSync('free-push-apps-script/appsscript.json','utf8'));
- assert(html.indexOf('pulze-theme.css?v=8')<html.indexOf('<body'));
+ assert(html.indexOf('pulze-theme.css?v=9')<html.indexOf('<body'));
  assert(!html.includes('pulseAqua'));
- assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v13'));
+ assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v14'));
  assert(theme.includes('--pulze-gradient'));
  assert(theme.includes('body::before'));
  assert(theme.includes('animation: pulze-glow'));
+ assert(theme.includes('#shell .chat[data-theme="dark"] .chat-body'));
+ assert(!theme.includes('#shell .chat[data-theme] .chat-body'));
  assert(!theme.includes('#e843b5'));
  assert(manifest.oauthScopes.includes('https://www.googleapis.com/auth/userinfo.email'));
  assert(manifest.oauthScopes.includes('https://www.googleapis.com/auth/firebase.database'));
@@ -72,6 +74,8 @@ test('mobile headers respect camera safe areas and notification reads use server
  assert(gateway.includes("headers:{Authorization:'Bearer '+token}"));
  assert(gateway.includes("d.platform==='android'||d.platform==='web'"));
  assert(gateway.includes('devices_(id,adminToken)'));
+ assert(html.includes('read-receipt'));
+ assert(html.includes('updatedAt:entries.length'));
 });
 test('profile login sync preserves gallery, and push tokens can only be written by their owner',()=>{
  assert(html.includes('publishPublicProfile(user,{...data,username,avatar})'));
@@ -140,5 +144,6 @@ test('iOS web push requires a Home Screen app and sends a visible FCM notificati
  assert(gateway.includes('webpush.fcm_options={link}'));
  assert(gateway.includes("tag:'message-'+compact_(event.messageId,64)"));
  assert(worker.includes('if(payload.notification)return'));
- assert(worker.includes('pulze-pro-shell-v13'));
+ assert(worker.includes('clear-chat-notifications'));
+ assert(worker.includes('pulze-pro-shell-v14'));
 });
