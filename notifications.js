@@ -50,12 +50,10 @@
       toast('Értesítési engedély megadva');
     }catch(e){if(window.ChatNative?.isNative){registered=false;localStorage.removeItem('messageNotifications');updateNotificationSetting();}toast(e.message||'Nem sikerült bekapcsolni az értesítéseket');}
   }
-  function beep(){
-    try{const ctx=new(window.AudioContext||window.webkitAudioContext)(),o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=880;g.gain.setValueAtTime(.08,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.18);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.2);o.onended=()=>ctx.close();}catch{}
-  }
   function alertMessage(chat,messages){
     if(localStorage.getItem('messageNotifications')!=='true')return;
-    if(!document.hidden){beep();return;}
+    // Avoid creating an AudioContext for a foreground message; it can steal Android audio focus.
+    if(!document.hidden){if(window.ChatNative?.isNative&&navigator.vibrate)navigator.vibrate(80);return;}
     if(registered||window.ChatNative?.isNative)return;
     if('Notification'in window&&Notification.permission==='granted'){
       const m=messages.at(-1);navigator.serviceWorker?.ready.then(reg=>reg.showNotification(chat.name,{body:m?.[1]||'Fényképet küldött',icon:'./icons/icon-192.png',tag:'message-'+(m?.[7]||chat.id),data:{chatId:chat.id,url:'./?chat='+encodeURIComponent(chat.id)}})).catch(console.warn);
