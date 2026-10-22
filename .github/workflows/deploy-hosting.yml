@@ -29,4 +29,5 @@ jobs:
       - name: Deploy Realtime Database rules
         run: firebase deploy --only database --project chat-alkalmazas-578c8 --non-interactive
       - name: Deploy Firebase Hosting
+        if: always()
         run: firebase deploy --only hosting --project chat-alkalmazas-578c8 --non-interactive
