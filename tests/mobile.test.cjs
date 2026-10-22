@@ -55,9 +55,9 @@ test('service worker focuses an existing app and sends the exact route',async()=
 });
 test('gold-and-black pulsing theme loads app-wide and the push gateway has its RTDB identity scope',()=>{
  const theme=fs.readFileSync('pulze-theme.css','utf8'),manifest=JSON.parse(fs.readFileSync('free-push-apps-script/appsscript.json','utf8'));
- assert(html.indexOf('pulze-theme.css?v=10')<html.indexOf('<body'));
+ assert(html.indexOf('pulze-theme.css?v=11')<html.indexOf('<body'));
  assert(!html.includes('pulseAqua'));
- assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v15'));
+ assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v16'));
  assert(theme.includes('--pulze-gradient'));
  assert(theme.includes('body::before'));
  assert(theme.includes('animation: pulze-glow'));
@@ -145,7 +145,7 @@ test('iOS web push requires a Home Screen app and sends a visible FCM notificati
  assert(gateway.includes("tag:'message-'+compact_(event.messageId,64)"));
  assert(worker.includes('if(payload.notification)return'));
  assert(worker.includes('clear-chat-notifications'));assert(worker.includes('if(payload.notification)return'));
- assert(worker.includes('pulze-pro-shell-v15'));
+ assert(worker.includes('pulze-pro-shell-v16'));
 });
 
 test('chat list sorts by latest activity and camera supports retake plus video picker',()=>{
