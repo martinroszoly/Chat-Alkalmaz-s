@@ -55,9 +55,9 @@ test('service worker focuses an existing app and sends the exact route',async()=
 });
 test('gold-and-black pulsing theme loads app-wide and the push gateway has its RTDB identity scope',()=>{
  const theme=fs.readFileSync('pulze-theme.css','utf8'),manifest=JSON.parse(fs.readFileSync('free-push-apps-script/appsscript.json','utf8'));
- assert(html.indexOf('pulze-theme.css?v=11')<html.indexOf('<body'));
+ assert(html.indexOf('pulze-theme.css?v=12')<html.indexOf('<body'));
  assert(!html.includes('pulseAqua'));
- assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v16'));
+ assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v17'));
  assert(theme.includes('--pulze-gradient'));
  assert(theme.includes('body::before'));
  assert(theme.includes('animation: pulze-glow'));
@@ -145,7 +145,7 @@ test('iOS web push requires a Home Screen app and sends a visible FCM notificati
  assert(gateway.includes("tag:'message-'+compact_(event.messageId,64)"));
  assert(worker.includes('if(payload.notification)return'));
  assert(worker.includes('clear-chat-notifications'));assert(worker.includes('if(payload.notification)return'));
- assert(worker.includes('pulze-pro-shell-v16'));
+ assert(worker.includes('pulze-pro-shell-v17'));
 });
 
 test('chat list sorts by latest activity and camera supports retake plus video picker',()=>{
@@ -163,17 +163,46 @@ test('chat list sorts by latest activity and camera supports retake plus video p
  dom.window.close();
 });
 
-test('sent read receipts appear only below a read last message and videos render with controls',()=>{
+test('sent read receipts appear only below a read last message and videos open in the media viewer',()=>{
  const {context,w,dom}=fixture();context.chats=[{id:'one',name:'Anna',remote:true,group:false,messages:[
   ['mine','', '12:00',0,'',0,false,'v','me','data:video/mp4;base64,AA==','Me',200,true,'video']
  ]}];
  Object.assign(context,{expiryTimeout:null,renderList:()=>{},persist:()=>{},getChatTheme:()=> 'dark',isGroupCreator:()=>false,messageAvatarHTML:()=>'',esc:s=>String(s),markChatRead:()=>{}});
  const source=html.slice(html.indexOf('function renderMessages(){'),html.indexOf('function selectChat('));vm.runInContext(source,context);vm.runInContext('renderMessages()',context);
- assert.equal(w.document.querySelector('video.message-video')?.getAttribute('controls'), '');
+ assert.equal(w.document.querySelector('video.message-video')?.getAttribute('role'), 'button');
+ assert.match(w.document.querySelector('video.message-video')?.getAttribute('onclick')||'',/openMessageMedia/);
  assert.equal(w.document.querySelector('.read-receipt')?.textContent,'Láttam');
  context.chats[0].messages.push(['received','Új üzenet','12:01',0,'',0,false,'r','peer','', 'Anna',300,true,'']);
  vm.runInContext('renderMessages()',context);assert.equal(w.document.querySelector('.read-receipt'),null);
  dom.window.close();
+});
+
+
+test('photos and videos open in a full-screen viewer with an explicit close control',()=>{
+ const {context,w,dom}=fixture();context.chats=[{id:'one',messages:[
+  ['mine','','12:00',0,'',0,false,'p','me','data:image/jpeg;base64,AA==','Me',100,false,'image'],
+  ['mine','','12:01',0,'',0,false,'v','me','data:video/mp4;base64,AA==','Me',200,false,'video']
+ ]}];context.current='one';
+ const video=w.document.getElementById('mediaViewerVideo');video.load=()=>{};video.pause=()=>{};
+ const start=html.indexOf('function openMessageMedia('),end=html.indexOf('function closeCamera()',start);
+ vm.runInContext(html.slice(start,end),context);
+ vm.runInContext('openMessageMedia(0)',context);
+ assert.equal(w.document.getElementById('mediaViewer').classList.contains('open'),true);
+ assert.equal(w.document.getElementById('mediaViewerImage').hidden,false);
+ vm.runInContext('openMessageMedia(1)',context);
+ assert.equal(w.document.getElementById('mediaViewerVideo').hidden,false);
+ assert.equal(w.document.querySelector('.media-viewer-close')?.getAttribute('aria-label'),'Kilépés');
+ vm.runInContext('closeMediaViewer()',context);
+ assert.equal(w.document.getElementById('mediaViewer').classList.contains('open'),false);
+ dom.window.close();
+});
+
+test('video upload accepts compressed files up to 8 MB within the RTDB payload limit',()=>{
+ const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;
+ assert(html.includes('MAX_CHAT_VIDEO_BYTES=8*1024*1024'));
+ assert(html.includes('MAX_CHAT_VIDEO_DATA_LENGTH=11300000'));
+ assert(rules.conversations.$id.messages.$msg.imageData['.validate'].includes("newData.parent().child('mediaType').val() === 'video'"));
+ assert(rules.conversations.$id.messages.$msg.imageData['.validate'].includes('11300000'));
 });
 
 test('push gateway validates Firebase ID tokens through Identity Toolkit and writes private device records with server scope',()=>{

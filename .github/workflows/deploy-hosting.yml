@@ -27,4 +27,4 @@ jobs:
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
       - name: Deploy Firebase Hosting
-        run: firebase deploy --only hosting --project chat-alkalmazas-578c8 --non-interactive
+        run: firebase deploy --only hosting,database --project chat-alkalmazas-578c8 --non-interactive
