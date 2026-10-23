@@ -1,6 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
 const {JSDOM}=require('jsdom');
 const html=fs.readFileSync('index.html','utf8');
+const notifications=fs.readFileSync('notifications.js','utf8');
 function fixture(){
  const dom=new JSDOM(html,{url:'https://example.test/Chat-Alkalmaz-s/',runScripts:'outside-only'}),w=dom.window;
  const context=vm.createContext({document:w.document,navigator:{},localStorage:w.localStorage,window:{},console,Image:w.Image,MediaStream:class{},setTimeout,clearTimeout,setInterval,clearInterval,Date,chats:[{id:'one',remote:true,peerUid:'peer',name:'Anna',messages:[]}],current:'one',activePhoneCall:null,pendingPhoneCall:null,firebaseUser:{uid:'me'},markChatRead:()=>{},toast:()=>{}});
@@ -96,10 +97,10 @@ test('mobile headers respect camera safe areas and notification reads use server
  assert(html.includes('read-receipt'));
  assert(html.includes('updatedAt:entries.length'));
 });
-test('profile login sync preserves gallery, and push tokens can only be written by their owner',()=>{
+test('profile login sync preserves gallery, and Android push token registration uses the free gateway',()=>{
  assert(html.includes('publishPublicProfile(user,{...data,username,avatar})'));
  const rules=JSON.parse(fs.readFileSync('database.rules.json','utf8')).rules;assert.equal(rules.pushDevices['.read'],false);assert.equal(rules.pushDevices['.write'],false);assert(rules.pushDevices.$uid['.read'].includes('auth.uid === $uid'));assert(!rules.pushDevices.$uid['.read'].includes("root.child('friends')"));assert(rules.pushDevices.$uid.$deviceId['.write'].includes('auth.uid === $uid'));assert(rules.pushDevices.$uid.$deviceId['.validate'].includes("'android'"));assert.equal(rules.serverConfig['.read'],false);
- const register=html.slice(html.indexOf(' registerPushDevice:'),html.indexOf(' getCallIceServers:'));assert(register.includes('callAdmin("registerPushDevice"'));assert(register.includes('callAdmin("unregisterPushDevice"'));assert(!register.includes('set(ref(db,path)'));assert(!register.includes('sendFreePush'));assert(html.includes('permission&&registered'));assert(html.includes('registered=!!window.ChatMobile?.isRegistered?.()'));
+ const register=html.slice(html.indexOf(' registerPushDevice:'),html.indexOf(' getCallIceServers:'));assert(notifications.includes("pushGatewayRequest('register',data)"));assert(notifications.includes("data.platform!=='ios'"));assert(notifications.includes("pushGatewayRequest('unregister',{deviceId})"));assert(notifications.includes("window.ChatNative?.platform!=='ios'"));assert(register.includes('callAdmin("registerPushDevice"'));assert(register.includes('callAdmin("unregisterPushDevice"'));assert(html.includes('permission&&registered'));assert(html.includes('registered=!!window.ChatMobile?.isRegistered?.()'));
 });
 test('Safari sign-in uses persistent storage fallbacks and keyboard-safe credentials',()=>{const theme=fs.readFileSync('pulze-theme.css','utf8');assert(html.includes('initializeAuth(app,{persistence:[indexedDBLocalPersistence,browserLocalPersistence,browserSessionPersistence]})'));assert(html.includes('autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email"'));assert(html.includes("document.getElementById('password').autocomplete=authMode==='signin'?'current-password':'new-password'"));assert(html.includes("event.key==='Enter'&&authMode==='signin'"));assert(theme.includes('body.auth-required .shell { height:auto!important'));assert(theme.includes('overflow:visible!important'));});
 test('opening a read chat does not create an endless read receipt loop',()=>{

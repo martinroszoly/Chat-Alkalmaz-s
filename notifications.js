@@ -22,10 +22,40 @@
       pendingRoute=null;
     }catch(e){toast(e.message||'Az értesítés nem nyitható meg');}
   }
+  async function pushGatewayRequest(kind,payload){
+    const config=await fetch('./push-config.json',{cache:'no-store'}).then(r=>r.json());
+    const gateway=String(config.pushGatewayUrl||'').trim();
+    if(!gateway)throw new Error('Az értesítési kapu nincs beállítva');
+    if(!firebaseUser?.emailVerified)throw new Error('Az értesítéshez jelentkezz be');
+    const event={kind,...payload,authToken:await firebaseUser.getIdToken(true)};
+    if(config.pushGatewayTransport==='apps-script'&&window.ChatNative?.isNative&&window.ChatNative.http){
+      const response=await window.ChatNative.http.post({url:gateway,headers:{'Content-Type':'text/plain;charset=utf-8'},data:JSON.stringify(event),responseType:'json'});
+      let result=response.data;if(typeof result==='string')try{result=JSON.parse(result)}catch{}
+      if(response.status>=400||result?.ok!==true)throw new Error(result?.error||'Az értesítési szolgáltatás elutasította a kérést');
+      return true;
+    }
+    if(config.pushGatewayTransport==='apps-script'){
+      await fetch(gateway,{method:'POST',mode:'no-cors',headers:{'content-type':'text/plain'},body:JSON.stringify(event)});return true;
+    }
+    const response=await fetch(gateway,{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+event.authToken},body:JSON.stringify(event)});
+    if(!response.ok)throw new Error('Az értesítési szolgáltatás nem válaszol');
+    return true;
+  }
+  async function registerPushDevice(data){
+    const config=await fetch('./push-config.json',{cache:'no-store'}).then(r=>r.json());
+    if(config.pushGatewayTransport==='apps-script'&&data.platform!=='ios')return pushGatewayRequest('register',data);
+    return window.chatFirebase.registerPushDevice({deviceId,...data});
+  }
+  async function unregisterPushDevice(){
+    if(!firebaseUser?.uid)return;
+    const config=await fetch('./push-config.json',{cache:'no-store'}).then(r=>r.json());
+    if(config.pushGatewayTransport==='apps-script'&&window.ChatNative?.platform!=='ios')return pushGatewayRequest('unregister',{deviceId});
+    return window.chatFirebase.unregisterPushDevice({deviceId});
+  }
   async function saveNativeToken(data){
     if(!firebaseUser?.emailVerified)return;
     if(typeof data?.token!=='string'||data.token.length<20)throw new Error('A telefon nem adott érvényes értesítési tokent');
-    await window.chatFirebase.registerPushDevice({deviceId,...data});registered=true;window.updateNotificationSetting?.();
+    await registerPushDevice(data);registered=true;window.updateNotificationSetting?.();
   }
   function isIOS(){return /iPhone|iPad|iPod/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
   function isStandalone(){return navigator.standalone===true||!!window.matchMedia?.('(display-mode: standalone)').matches;}
@@ -80,7 +110,7 @@
     }else{registered=false;window.updateNotificationSetting?.();}
   }
   async function beforeSignOut(){
-    if(firebaseUser?.uid)await window.chatFirebase.unregisterPushDevice({deviceId});
+    if(firebaseUser?.uid)await unregisterPushDevice();
     registered=false;await endPhoneCall();if(window.ChatNative?.platform==='ios')await window.ChatNative.phone.setSession({}).catch(console.warn);
   }
   navigator.serviceWorker?.addEventListener('message',e=>{if(e.data?.type==='notification-route')openRoute(e.data);});
