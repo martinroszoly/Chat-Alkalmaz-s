@@ -1,5 +1,5 @@
-const CACHE='pulze-pro-shell-v17';
-const SHELL=['./','./manifest.json','./icon.svg','./pulze-theme.css?v=12','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png','./icons/apple-touch-icon.png','./calls.js','./notifications.js','./mobile-bridge.js'];
+const CACHE='pulze-pro-shell-v14';
+const SHELL=['./','./manifest.json','./icon.svg','./pulze-theme.css?v=10','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png','./icons/apple-touch-icon.png','./calls.js','./notifications.js','./mobile-bridge.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
@@ -11,18 +11,18 @@ self.addEventListener('notificationclick',e=>{
   e.notification.close();const d=e.notification.data||{},target=new URL(d.url||'./',self.registration.scope);
   if(target.origin!==self.location.origin)return;
   if(d.chatId)target.searchParams.set('chat',d.chatId);if(d.callId)target.searchParams.set('call',d.callId);
-  const clearNotifications=d.chatId&&self.registration.getNotifications?self.registration.getNotifications().then(items=>items.filter(n=>n.data?.chatId===d.chatId).forEach(n=>n.close())):Promise.resolve();
-  e.waitUntil(clearNotifications.then(()=>self.clients.matchAll({type:'window',includeUncontrolled:true})).then(async windows=>{
+  e.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(async windows=>{
     const client=windows.find(c=>c.url.startsWith(self.registration.scope));
-    if(client){if(d.chatId)client.postMessage({type:'clear-chat-notifications',chatId:d.chatId});client.postMessage({type:'notification-route',chatId:d.chatId,callId:d.callId});return client.focus();}
+    if(client){client.postMessage({type:'notification-route',chatId:d.chatId,callId:d.callId});return client.focus();}
     return self.clients.openWindow(target.href);
   }));
 });
 importScripts('https://www.gstatic.com/firebasejs/13.0.0/firebase-app-compat.js','https://www.gstatic.com/firebasejs/13.0.0/firebase-messaging-compat.js');
 firebase.initializeApp({apiKey:'AIzaSyAX1n-46JJ6a3XnQwd_d0QaDoQbV1QnSYc',projectId:'chat-alkalmazas-578c8',messagingSenderId:'855477495883',appId:'1:855477495883:web:b1ded8145bc6da570c05ce'});
 firebase.messaging().onBackgroundMessage(payload=>{
-  if(payload.notification)return;
-  const d=payload.data||{};if(d.type==='call'&&Number(d.expiresAt)<Date.now())return;
+  if(payload.notification)return;const d=payload.data||{};if(d.type==='call'&&Number(d.expiresAt)<Date.now())return;
   if(d.type==='call-ended')return self.registration.getNotifications({tag:'call-'+d.callId}).then(items=>items.forEach(n=>n.close()));
   return self.registration.showNotification(d.title||'Pulze-pro',{body:(d.isGroup==='true'?d.senderName+'\n':'')+(d.body||'Új üzenet'),icon:d.avatarUrl||'./icons/icon-192.png',badge:'./icons/badge.png',tag:d.tag,requireInteraction:d.type==='call',vibrate:d.type==='call'?[300,100,300,100,300]:[120],data:{chatId:d.chatId,callId:d.callId,url:d.type==='call'?'./?call='+encodeURIComponent(d.callId):'./?chat='+encodeURIComponent(d.chatId)}});
 });
+
+self.addEventListener('message',e=>{if(e.data?.type==='clear-chat-notifications'&&e.data.chatId){const chatId=e.data.chatId;e.waitUntil(self.registration.getNotifications().then(items=>items.filter(n=>n.data?.chatId===chatId).forEach(n=>n.close())));}});
