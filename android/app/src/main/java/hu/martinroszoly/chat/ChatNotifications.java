@@ -13,11 +13,13 @@ import java.util.Map;
 
 public class ChatNotifications {
     static final long[] CALL_VIBRATION={0,700,400,700,400,1100};
-    static final String MESSAGES="chat_messages_v2",CALLS="chat_calls_v4",ACTIVE="chat_active_calls_v1";
+    // v3 is deliberately a new channel: Android keeps an existing channel's
+    // sound settings and would otherwise continue interrupting music.
+    static final String MESSAGES="chat_messages_v3",CALLS="chat_calls_v4",ACTIVE="chat_active_calls_v1";
     static int id(String key){return key.hashCode()&0x7fffffff;}
     static void channels(Context c){
         NotificationManager nm=c.getSystemService(NotificationManager.class);
-        NotificationChannel messages=new NotificationChannel(MESSAGES,"Pulze-pro üzenetek",NotificationManager.IMPORTANCE_HIGH);messages.enableVibration(true);messages.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build());nm.createNotificationChannel(messages);
+        NotificationChannel messages=new NotificationChannel(MESSAGES,"Pulze-pro üzenetek",NotificationManager.IMPORTANCE_HIGH);messages.enableVibration(false);messages.setSound(null,null);nm.createNotificationChannel(messages);
         NotificationChannel calls=new NotificationChannel(CALLS,"Bejövő hívások",NotificationManager.IMPORTANCE_HIGH);calls.enableVibration(true);calls.setVibrationPattern(CALL_VIBRATION);calls.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE),new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build());nm.createNotificationChannel(calls);
         nm.createNotificationChannel(new NotificationChannel(ACTIVE,"Folyamatban lévő hívás",NotificationManager.IMPORTANCE_LOW));
     }

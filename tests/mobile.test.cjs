@@ -46,6 +46,10 @@ test('foreground chat alerts stay visual and never take audio focus from music',
  vm.runInContext(fs.readFileSync('notifications.js','utf8'),context);context.window.ChatMobile.alertMessage({name:'Anna'},[['received','Szia']]);
  assert.deepEqual(alerts,['Anna: Szia']);dom.window.close();
 });
+test('Android message notification channel is silent and versioned to replace old sound settings',()=>{
+ const source=fs.readFileSync('android/app/src/main/java/hu/martinroszoly/chat/ChatNotifications.java','utf8');
+ assert(source.includes('chat_messages_v3'));assert(source.includes('messages.setSound(null,null)'));assert(source.includes('messages.enableVibration(false)'));
+});
 test('native notifications are not marked enabled until a valid FCM token is saved',async()=>{
  const {context,w,dom}=fixture(),errors=[];context.firebaseUser={uid:'me',emailVerified:true};context.window={addEventListener:()=>{},ChatNative:{isNative:true,platform:'android',phone:{getPendingAction:async()=>({}),registerPush:async()=>undefined}}};context.crypto=require('node:crypto').webcrypto;context.location={href:'https://example.test/'};context.URL=URL;context.window.chatFirebase={registerPushDevice:async()=>true};context.toast=message=>errors.push(message);context.updateNotificationSetting=()=>{};
  vm.runInContext(fs.readFileSync('notifications.js','utf8'),context);await context.window.ChatMobile.accountReady(context.firebaseUser);
