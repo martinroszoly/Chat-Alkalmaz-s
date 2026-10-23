@@ -36,6 +36,11 @@ test('speaker button changes state only after successful native routing',async()
  await vm.runInContext('toggleCallSpeaker()',context);assert.equal(w.document.getElementById('callSpeakerButton').getAttribute('aria-pressed'),'false');
  fail=false;await vm.runInContext('toggleCallSpeaker()',context);assert.equal(w.document.getElementById('callSpeakerButton').getAttribute('aria-pressed'),'true');dom.window.close();
 });
+test('an idle call-list refresh never changes native audio routing',()=>{
+ const {context,dom}=fixture(),calls=[];context.window.ChatNative={phone:{stopRingtone:async()=>{},setSpeaker:async data=>calls.push(['speaker',data]),endCall:async data=>calls.push(['end',data])}};
+ vm.runInContext(fs.readFileSync('calls.js','utf8'),context);vm.runInContext('releasePhoneCall()',context);
+ assert.deepEqual(calls,[]);dom.window.close();
+});
 test('notification opens the requested existing chat without creating a new one',async()=>{
  const {context,w,dom}=fixture();let opened=null,shown=false;context.firebaseUser={uid:'me',emailVerified:true};context.window={addEventListener:()=>{}};context.crypto=require('node:crypto').webcrypto;context.location={href:'https://example.test/'};context.URL=URL;
  Object.assign(context,{selectChat:id=>opened=id,showChats:()=>shown=true});vm.runInContext(fs.readFileSync('notifications.js','utf8'),context);
@@ -49,6 +54,11 @@ test('foreground chat alerts stay visual and never take audio focus from music',
 test('Android message notification channel is silent and versioned to replace old sound settings',()=>{
  const source=fs.readFileSync('android/app/src/main/java/hu/martinroszoly/chat/ChatNotifications.java','utf8');
  assert(source.includes('chat_messages_v3'));assert(source.includes('messages.setSound(null,null)'));assert(source.includes('messages.enableVibration(false)'));
+});
+test('ending an Android call restores normal audio mode instead of retaining communication mode',()=>{
+ const source=fs.readFileSync('android/app/src/main/java/hu/martinroszoly/chat/ChatPhonePlugin.java','utf8');
+ assert(source.includes('getContext().stopService(new Intent(getContext(),ActiveCallService.class));resetAudioRouting()'));
+ assert(source.includes('audio.setMode(AudioManager.MODE_NORMAL)'));
 });
 test('native notifications are not marked enabled until a valid FCM token is saved',async()=>{
  const {context,w,dom}=fixture(),errors=[];context.firebaseUser={uid:'me',emailVerified:true};context.window={addEventListener:()=>{},ChatNative:{isNative:true,platform:'android',phone:{getPendingAction:async()=>({}),registerPush:async()=>undefined}}};context.crypto=require('node:crypto').webcrypto;context.location={href:'https://example.test/'};context.URL=URL;context.window.chatFirebase={registerPushDevice:async()=>true};context.toast=message=>errors.push(message);context.updateNotificationSetting=()=>{};

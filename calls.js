@@ -90,12 +90,15 @@ function releasePhoneCall() {
   callGeneration++; clearTimeout(callTimeout);clearInterval(durationTimer);durationTimer=null;
   document.getElementById('callDuration').textContent='';stopCallRingtone();
   const call=activePhoneCall;activePhoneCall=null;
+  const incoming=pendingPhoneCall;
   if(call){for(const stop of call.stops||[])stop();call.pc?.close();if(call.id)window.ChatNative?.phone.endCall({callId:call.id}).catch(console.warn);}
-  if(pendingPhoneCall?.id)window.ChatNative?.phone.endCall({callId:pendingPhoneCall.id}).catch(console.warn);
+  if(incoming?.id)window.ChatNative?.phone.endCall({callId:incoming.id}).catch(console.warn);
   localCallStream?.getTracks().forEach(t=>t.stop());localCallStream=null;pendingPhoneCall=null;
   document.getElementById('remoteCallAudio').srcObject=null;
   callSpeaker=false;document.getElementById('callSpeakerButton').setAttribute('aria-pressed','false');
-  window.ChatNative?.phone.setSpeaker({enabled:false}).catch(console.warn);hideCallOverlay();
+  // Audio routing is owned by an active call. An idle account/call-list refresh
+  // must never move Android into MODE_IN_COMMUNICATION.
+  hideCallOverlay();
 }
 async function startPhoneCall() {
   if(activePhoneCall||pendingPhoneCall){toast('Már van folyamatban lévő hívás');return;}

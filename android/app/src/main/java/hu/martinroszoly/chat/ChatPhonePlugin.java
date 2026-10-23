@@ -49,7 +49,7 @@ public class ChatPhonePlugin extends Plugin {
         Intent intent=new Intent(getContext(),ActiveCallService.class);intent.putExtra("callId",call.getString("callId",""));intent.putExtra("name",call.getString("name","Hívás"));
         try{getContext().startForegroundService(intent);call.resolve();}catch(Exception e){call.reject("A háttérhívást nem lehet elindítani",e);}
     }
-    @PluginMethod public void endCall(PluginCall call){stopRingtoneNow();ChatNotifications.cancel(getContext(),call.getString("callId",""));getContext().stopService(new Intent(getContext(),ActiveCallService.class));setSpeakerNow(false);call.resolve();}
+    @PluginMethod public void endCall(PluginCall call){stopRingtoneNow();ChatNotifications.cancel(getContext(),call.getString("callId",""));getContext().stopService(new Intent(getContext(),ActiveCallService.class));resetAudioRouting();call.resolve();}
     @PluginMethod public void setSpeaker(PluginCall call){try{setSpeakerNow(Boolean.TRUE.equals(call.getBoolean("enabled",false)));call.resolve();}catch(Exception e){call.reject("A kihangosítás nem állítható",e);}}
     private void setSpeakerNow(boolean enabled){
         AudioManager audio=(AudioManager)getContext().getSystemService(Context.AUDIO_SERVICE);audio.setMode(AudioManager.MODE_IN_COMMUNICATION);
@@ -58,6 +58,11 @@ public class ChatPhonePlugin extends Plugin {
             if(target!=null&&!audio.setCommunicationDevice(target))throw new IllegalStateException("Nem sikerült hangkimenetet váltani");
             else if(target==null&&enabled)throw new IllegalStateException("Nem érhető el kihangosító");else if(target==null)audio.clearCommunicationDevice();
         }else audio.setSpeakerphoneOn(enabled);
+    }
+    private void resetAudioRouting(){
+        AudioManager audio=(AudioManager)getContext().getSystemService(Context.AUDIO_SERVICE);
+        if(Build.VERSION.SDK_INT>=31)audio.clearCommunicationDevice();else audio.setSpeakerphoneOn(false);
+        audio.setMode(AudioManager.MODE_NORMAL);
     }
     @PluginMethod public void startRingtone(PluginCall call){stopRingtoneNow();ringtone=RingtoneManager.getRingtone(getContext(),RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE));if(ringtone!=null){if(Build.VERSION.SDK_INT>=28)ringtone.setLooping(true);ringtone.play();}call.resolve();}
     @PluginMethod public void stopRingtone(PluginCall call){stopRingtoneNow();call.resolve();}
