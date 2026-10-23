@@ -82,9 +82,9 @@ test('service worker focuses an existing app and sends the exact route',async()=
 });
 test('gold-and-black pulsing theme loads app-wide and the push gateway has its RTDB identity scope',()=>{
  const theme=fs.readFileSync('pulze-theme.css','utf8'),manifest=JSON.parse(fs.readFileSync('free-push-apps-script/appsscript.json','utf8'));
- assert(html.indexOf('pulze-theme.css?v=9')<html.indexOf('<body'));
+ assert(html.indexOf('pulze-theme.css?v=10')<html.indexOf('<body'));
  assert(!html.includes('pulseAqua'));
- assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v14'));
+ assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v15'));
  assert(theme.includes('--pulze-gradient'));
  assert(theme.includes('body::before'));
  assert(theme.includes('animation: pulze-glow'));
@@ -172,5 +172,20 @@ test('iOS web push requires a Home Screen app and sends a visible FCM notificati
  assert(gateway.includes("tag:'message-'+compact_(event.messageId,64)"));
  assert(worker.includes('if(payload.notification)return'));
  assert(worker.includes('clear-chat-notifications'));
- assert(worker.includes('pulze-pro-shell-v14'));
+ assert(worker.includes('pulze-pro-shell-v15'));
+});
+test('chat camera, gallery videos, storage uploads, media viewer and receipts are present',()=>{
+ const theme=fs.readFileSync('pulze-theme.css','utf8'),storageRules=fs.readFileSync('storage.rules','utf8');
+ assert(html.includes('id="cameraModal"'));assert(html.includes('onclick="capturePhoto()"'));assert(html.includes('id="mediaInput" accept="image/*,video/*"'));
+ assert(html.includes('uploadConversationMedia'));assert(html.includes('mediaType||"image"'));assert(html.includes('class="message-video"'));
+ assert(html.includes("m[0]==='mine'&&m[12]"));assert(theme.includes('.camera-controls'));assert(theme.includes('grid-template-columns:1fr 84px 1fr'));
+ assert(storageRules.includes('request.auth.uid == uid'));assert(storageRules.includes('52428800'));assert(storageRules.includes('(image|video)'));
+});
+test('video messages render in the chat and the seen marker hides for an unread reply, then returns after reading',()=>{
+ const {context,w,dom}=fixture(),chat={id:'one',name:'Anna',remote:true,group:false,avatar:'',messages:[['mine','szia','12:00',0,'',0,false,'sent','me','', 'Martin',1,true,'',''],['received','válasz','12:01',0,'',0,false,'reply','peer','', 'Anna',2,false,'','']]};
+ context.chats=[chat];Object.assign(context,{expiryTimeout:null,renderList:()=>{},persist:()=>{},getChatTheme:()=> 'dark',isGroupCreator:()=>false,messageAvatarHTML:()=>'',esc:String,markChatRead:()=>{}});
+ const source=html.slice(html.indexOf('function renderMessages(){'),html.indexOf('function selectChat('));vm.runInContext(source,context);vm.runInContext('renderMessages()',context);
+ assert.equal(w.document.querySelectorAll('video.message-video').length,0);assert.equal(w.document.querySelector('.read-receipt'),null);
+ chat.messages[1][12]=true;vm.runInContext('renderMessages()',context);assert.equal(w.document.querySelector('.read-receipt')?.textContent,'Láttam');
+ chat.messages.push(['mine','', '12:02',0,'',0,false,'clip','me','', 'Martin',3,false,'https://cdn.example/clip.mp4','video']);vm.runInContext('renderMessages()',context);assert.equal(w.document.querySelectorAll('video.message-video').length,1);assert.equal(w.document.querySelector('.read-receipt'),null);dom.window.close();
 });

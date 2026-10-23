@@ -115,6 +115,12 @@
                 ".write": "auth != null && auth.token.email_verified === true && auth.uid === $uid && root.child('conversations').child($id).child('members').child(auth.uid).val() === true && newData.val() === true",
                 ".validate": "newData.val() === true"
               }
+            },
+            "mediaUrl": {
+              ".validate": "newData.isString() && newData.val().length <= 2048"
+            },
+            "mediaType": {
+              ".validate": "newData.val() === 'image' || newData.val() === 'video'"
             }
           }
         },

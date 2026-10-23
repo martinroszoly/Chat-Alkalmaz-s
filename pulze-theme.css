@@ -532,3 +532,27 @@ body.auth-required .field input { min-height:50px; font-size:16px; }
 }
 
 .read-receipt{align-self:flex-end;margin:-9px 5px 0;color:#b8a76e;font-size:10px;opacity:.82}
+
+/* Camera capture and media preview, sized for phone safe areas. */
+#shell .composer .media-action{display:grid;place-items:center;flex:0 0 38px;width:38px;height:42px;padding:5px;color:#dcb84f!important}
+#shell .composer .media-action svg{display:block;width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#messages .bubble .message-video{display:block;width:min(60vw,320px);max-height:min(42vh,360px);border-radius:12px;background:#080809;object-fit:contain;cursor:pointer}
+.camera-modal,.media-viewer{position:fixed;inset:0;z-index:1000;display:none;background:#050505;color:#fff;overflow:hidden;touch-action:manipulation}
+.camera-modal.open,.media-viewer.open{display:block}
+.camera-modal>video,.camera-modal>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#050505}
+.camera-close,.media-viewer-close{position:absolute;z-index:3;top:max(16px,env(safe-area-inset-top));right:18px;width:44px;height:44px;border:1px solid #ffffff55;border-radius:50%;background:#151515d9;color:#fff;font:32px/1 'DM Sans',sans-serif;cursor:pointer}
+.camera-error{position:absolute;top:35%;left:10%;right:10%;padding:18px;border:1px solid #795d31;border-radius:16px;background:#171614;color:#fff;text-align:center;font-size:16px}
+.camera-controls{position:absolute;z-index:2;left:0;right:0;bottom:max(24px,env(safe-area-inset-bottom));height:84px;display:grid;grid-template-columns:1fr 84px 1fr;align-items:center;padding:0 28px}
+.camera-controls button,.viewer-delete,.viewer-send{width:58px;height:58px;border:2px solid #d8ae40;border-radius:50%;display:grid;place-items:center;background:#181716;color:#ffe18a;font-size:26px;cursor:pointer;justify-self:center}
+.camera-controls .camera-shutter{width:76px;height:76px;border:4px solid #fff;background:#ffffff25;padding:7px;grid-column:2;grid-row:1}
+.camera-shutter span{display:block;width:100%;height:100%;border-radius:50%;background:#fff}
+.camera-controls .camera-delete{grid-column:1;grid-row:1}
+.camera-controls .camera-send{grid-column:3;grid-row:1;background:linear-gradient(135deg,#ffe270,#eea522);color:#1b1305;border-color:#f4cb4a;font-size:30px;font-weight:800}
+.camera-controls button[hidden],.camera-modal [hidden],.media-viewer [hidden]{display:none!important}
+.media-viewer{display:none;align-items:center;justify-content:center;padding:72px 12px max(72px,env(safe-area-inset-bottom))}
+.media-viewer.open{display:flex}
+.media-viewer>img,.media-viewer>video{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+.media-viewer .viewer-delete,.media-viewer .viewer-send{position:absolute;z-index:3;bottom:max(20px,env(safe-area-inset-bottom));width:58px;height:58px}
+.media-viewer .viewer-delete{left:28px}
+.media-viewer .viewer-send{right:28px;background:linear-gradient(135deg,#ffe270,#eea522);color:#1b1305;border-color:#f4cb4a;font-weight:800}
+@media(max-width:620px){#shell .composer{gap:4px;padding-inline:8px}#shell .composer .media-action{flex-basis:34px;width:34px}#shell .composer .media-action svg{width:25px;height:25px}#shell .composer .compose-input{padding-inline:12px}#shell .composer .send{flex:0 0 44px;width:44px;height:44px}.camera-controls{padding-inline:20px}}
