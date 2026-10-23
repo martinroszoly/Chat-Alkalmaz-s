@@ -82,9 +82,9 @@ test('service worker focuses an existing app and sends the exact route',async()=
 });
 test('gold-and-black pulsing theme loads app-wide and the push gateway has its RTDB identity scope',()=>{
  const theme=fs.readFileSync('pulze-theme.css','utf8'),manifest=JSON.parse(fs.readFileSync('free-push-apps-script/appsscript.json','utf8'));
- assert(html.indexOf('pulze-theme.css?v=10')<html.indexOf('<body'));
+ assert(html.indexOf('pulze-theme.css?v=11')<html.indexOf('<body'));
  assert(!html.includes('pulseAqua'));
- assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v15'));
+ assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v16'));
  assert(theme.includes('--pulze-gradient'));
  assert(theme.includes('body::before'));
  assert(theme.includes('animation: pulze-glow'));
@@ -172,12 +172,19 @@ test('iOS web push requires a Home Screen app and sends a visible FCM notificati
  assert(gateway.includes("tag:'message-'+compact_(event.messageId,64)"));
  assert(worker.includes('if(payload.notification)return'));
  assert(worker.includes('clear-chat-notifications'));
- assert(worker.includes('pulze-pro-shell-v15'));
+ assert(worker.includes('pulze-pro-shell-v16'));
+});
+test('photo compression fallback stays within the Realtime Database image limit',async()=>{
+ const start=html.indexOf('async function compressPhotoForDatabase('),end=html.indexOf('async function uploadChatMedia(',start);assert(start>=0&&end>start);
+ const {context,dom}=fixture();let blobs=[];context.createImageBitmap=async()=>({width:2400,height:1800,close(){}});context.document.createElement=()=>({width:0,height:0,getContext:()=>({drawImage(){}}),toBlob:undefined});
+ const canvas=context.document.createElement();canvas.toBlob=(callback,type,quality)=>{const blob={size:Math.round(canvas.width*canvas.height*quality*.55),type};blobs.push(blob);callback(blob)};context.document.createElement=()=>canvas;
+ context.FileReader=class{readAsDataURL(blob){this.result='data:image/jpeg;base64,'+'x'.repeat(Math.ceil(blob.size*4/3));this.onload()}};
+ vm.runInContext(html.slice(start,end),context);const result=await context.compressPhotoForDatabase({});assert(result.startsWith('data:image/jpeg;base64,'));assert(result.length<=740000);assert(blobs.length>0);dom.window.close();
 });
 test('chat camera, gallery videos, storage uploads, media viewer and receipts are present',()=>{
  const theme=fs.readFileSync('pulze-theme.css','utf8'),storageRules=fs.readFileSync('storage.rules','utf8');
  assert(html.includes('id="cameraModal"'));assert(html.includes('onclick="capturePhoto()"'));assert(html.includes('id="mediaInput" accept="image/*,video/*"'));
- assert(html.includes('uploadConversationMedia'));assert(html.includes('mediaType||"image"'));assert(html.includes('class="message-video"'));
+ assert(html.includes('uploadConversationMedia'));assert(html.includes('compressPhotoForDatabase(file)'));assert(html.includes('mediaType||"image"'));assert(html.includes('class="message-video"'));
  assert(html.includes("m[0]==='mine'&&m[12]"));assert(theme.includes('.camera-controls'));assert(theme.includes('grid-template-columns:1fr 84px 1fr'));
  assert(storageRules.includes('request.auth.uid == uid'));assert(storageRules.includes('52428800'));assert(storageRules.includes('(image|video)'));
 });
