@@ -82,9 +82,9 @@ test('service worker focuses an existing app and sends the exact route',async()=
 });
 test('gold-and-black pulsing theme loads app-wide and the push gateway has its RTDB identity scope',()=>{
  const theme=fs.readFileSync('pulze-theme.css','utf8'),manifest=JSON.parse(fs.readFileSync('free-push-apps-script/appsscript.json','utf8'));
- assert(html.indexOf('pulze-theme.css?v=11')<html.indexOf('<body'));
+ assert(html.indexOf('pulze-theme.css?v=12')<html.indexOf('<body'));
  assert(!html.includes('pulseAqua'));
- assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v16'));
+ assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v17'));
  assert(theme.includes('--pulze-gradient'));
  assert(theme.includes('body::before'));
  assert(theme.includes('animation: pulze-glow'));
@@ -163,6 +163,9 @@ test('accepting a request atomically repairs both users friend rows',async()=>{
  dom.window.close();
 });
 
+test('web app offers a reload button when a service worker update takes control',()=>{
+ assert(html.includes('id="appUpdatePrompt"'));assert(html.includes('function applyWebUpdate()'));assert(html.includes("navigator.serviceWorker.addEventListener('controllerchange'"));assert(html.includes("if(worker.state==='installed'&&hadController)"));assert(fs.readFileSync('sw.js','utf8').includes('pulze-pro-shell-v17'));
+});
 test('push queue TTL is 28 days and Apps Script endpoint exposes a health check',()=>{
  const gateway=fs.readFileSync('free-push-apps-script/Code.gs','utf8'),functions=fs.readFileSync('functions/push.js','utf8'),apple=fs.readFileSync('functions/apple-push.js','utf8'),worker=fs.readFileSync('free-push-worker/src/worker.js','utf8');
  assert(gateway.includes("?'60':'2419200'"));assert(gateway.includes("?'60s':'2419200s'"));assert(gateway.includes('function doGet()'));
@@ -177,7 +180,7 @@ test('iOS web push requires a Home Screen app and sends a visible FCM notificati
  assert(gateway.includes("tag:'message-'+compact_(event.messageId,64)"));
  assert(worker.includes('if(payload.notification)return'));
  assert(worker.includes('clear-chat-notifications'));
- assert(worker.includes('pulze-pro-shell-v16'));
+ assert(worker.includes('pulze-pro-shell-v17'));
 });
 test('photo compression fallback stays within the Realtime Database image limit',async()=>{
  const start=html.indexOf('async function compressPhotoForDatabase('),end=html.indexOf('async function uploadChatMedia(',start);assert(start>=0&&end>start);
