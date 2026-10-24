@@ -46,3 +46,17 @@ A fejlesztői build `aps-environment` értéke `development`; TestFlight/App Sto
 7. **Valós eszközteszt:** két fiókkal ellenőrizd az előtérben/háttérben/lezárt képernyőn érkező privát és csoportos üzenetet, értesítésből chatnyitást, bejövő hívás fogadását, elutasítását, kihangosítást és lerakást. Néma mód, fókusz mód, értesítési engedélyek és Android teljes képernyős hívási engedély módosíthatják a jelzést. Release APK/AAB kiadáshoz saját Android aláírókulcs is kell.
 
 Az Apple hitelesítési kulcsok és Android aláírókulcsok nem szerepelnek a forrásban. A Firebase adatokat nem migráljuk és nem töröljük.
+
+
+## Android appon belüli frissítés beállítása
+
+Az Android app frissítéskor a GitHub legutóbbi kiadását ellenőrzi, letölti a `Pulze-pro.apk` fájlt, majd megnyitja a rendszer telepítőjét. A telepítőben a felhasználónak jóvá kell hagynia a cserét. A kiadás tartós aláírókulcsát a GitHub repository **Settings → Secrets and variables → Actions** részében kell beállítani, titkokként:
+
+- `ANDROID_KEYSTORE_BASE64`: a PKCS#12 `.p12` fájl base64 tartalma;
+- `ANDROID_KEYSTORE_PASSWORD`: a tároló jelszava;
+- `ANDROID_KEY_ALIAS`: a kulcs aliasa;
+- `ANDROID_KEY_PASSWORD`: a kulcs jelszava.
+
+Kulcs létrehozása: `keytool -genkeypair -v -keystore pulze-pro-release.p12 -storetype PKCS12 -alias pulze-pro -keyalg RSA -keysize 3072 -validity 10000`. A kulcsot tartsd biztonságos, privát helyen, ne töltsd fel a repóba, és ne változtasd meg később. A base64 érték Linuxon `base64 -w0 pulze-pro-release.p12` paranccsal állítható elő.
+
+A jelenlegi APK korábbi CI-buildből származó debug aláírással készült. Az első tartós kulccsal aláírt kiadás előtt a régi APK aláírása nem egyezhet, ezért az egyszeri átállásnál el kell távolítani a régi appot és feltelepíteni az első stabil kiadást. Utána az azonos kulccsal aláírt, nagyobb `versionCode`-ú APK-k telepíthetők az appon belüli gombbal, az app törlése nélkül.

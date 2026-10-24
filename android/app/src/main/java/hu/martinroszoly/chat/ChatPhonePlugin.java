@@ -3,11 +3,14 @@ package hu.martinroszoly.chat;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.os.Build;
+import android.provider.Settings;
+import androidx.core.content.FileProvider;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -17,10 +20,50 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 import com.google.firebase.messaging.FirebaseMessaging;
+import org.json.JSONObject;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 @CapacitorPlugin(name="ChatPhone",permissions={@Permission(alias="notifications",strings={Manifest.permission.POST_NOTIFICATIONS})})
 public class ChatPhonePlugin extends Plugin {
     private Ringtone ringtone;
+    @PluginMethod public void checkForUpdate(PluginCall call){
+        new Thread(()->{
+            HttpURLConnection connection=null;
+            try{
+                connection=(HttpURLConnection)new URL("https://api.github.com/repos/martinroszoly/Chat-Alkalmaz-s/releases/latest").openConnection();
+                connection.setRequestProperty("Accept","application/vnd.github+json");connection.setRequestProperty("User-Agent","Pulze-pro-Android");connection.setConnectTimeout(8000);connection.setReadTimeout(8000);
+                if(connection.getResponseCode()!=200)throw new IllegalStateException("A frissítés ellenőrzése most nem sikerült.");
+                StringBuilder body=new StringBuilder();try(InputStream in=connection.getInputStream()){byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))!=-1)body.append(new String(buffer,0,n,java.nio.charset.StandardCharsets.UTF_8));}
+                JSONObject release=new JSONObject(body.toString());String releaseTag=release.optString("tag_name","");String releaseBody=release.optString("body","");int versionCode=0;String versionName=releaseTag;java.util.regex.Matcher matcher=java.util.regex.Pattern.compile("versionCode\\s*:\\s*(\\d+)").matcher(releaseBody);if(matcher.find())versionCode=Integer.parseInt(matcher.group(1));java.util.regex.Matcher nameMatcher=java.util.regex.Pattern.compile("versionName\\s*:\\s*([^\\r\\n]+)").matcher(releaseBody);if(nameMatcher.find())versionName=nameMatcher.group(1).trim();
+                String apkUrl="";org.json.JSONArray assets=release.optJSONArray("assets");if(assets!=null)for(int i=0;i<assets.length();i++){JSONObject asset=assets.optJSONObject(i);if(asset!=null&&"Pulze-pro.apk".equals(asset.optString("name"))){apkUrl=asset.optString("browser_download_url","");break;}}
+                if(versionCode<=0||apkUrl.isEmpty())throw new IllegalStateException("A kiadási csomag még nem érhető el.");
+                JSObject result=new JSObject();result.put("available",versionCode>BuildConfig.VERSION_CODE);result.put("versionCode",versionCode);result.put("versionName",versionName);result.put("apkUrl",apkUrl);call.resolve(result);
+            }catch(Exception e){call.reject(e.getMessage()==null?"A frissítés nem ellenőrizhető.":e.getMessage(),e);}finally{if(connection!=null)connection.disconnect();}
+        }).start();
+    }
+    @PluginMethod public void installAppUpdate(PluginCall call){
+        String apkUrl=call.getString("apkUrl","");
+        if(!apkUrl.startsWith("https://github.com/martinroszoly/Chat-Alkalmaz-s/releases/download/")){call.reject("Érvénytelen frissítési cím.");return;}
+        if(Build.VERSION.SDK_INT>=26&&!getContext().getPackageManager().canRequestPackageInstalls()){
+            try{Intent settings=new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:"+getContext().getPackageName()));settings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);getContext().startActivity(settings);JSObject result=new JSObject();result.put("needsPermission",true);call.resolve(result);}catch(Exception e){call.reject("Engedélyezd az alkalmazástelepítést a telefon beállításaiban.",e);}return;
+        }
+        call.setKeepAlive(true);
+        new Thread(()->{
+            HttpURLConnection connection=null;
+            try{
+                connection=(HttpURLConnection)new URL(apkUrl).openConnection();connection.setInstanceFollowRedirects(true);connection.setConnectTimeout(15000);connection.setReadTimeout(30000);
+                if(connection.getResponseCode()!=200)throw new IllegalStateException("Az APK letöltése nem sikerült.");
+                long length=connection.getContentLengthLong();if(length>100L*1024*1024)throw new IllegalStateException("A frissítőfájl túl nagy.");
+                File folder=new File(getContext().getCacheDir(),"updates");if(!folder.exists()&&!folder.mkdirs())throw new IllegalStateException("Nem sikerült előkészíteni a frissítést.");
+                File apk=new File(folder,"Pulze-pro.apk");try(InputStream in=connection.getInputStream();FileOutputStream out=new FileOutputStream(apk)){byte[] buffer=new byte[65536];int n;while((n=in.read(buffer))!=-1)out.write(buffer,0,n);}
+                Uri uri=FileProvider.getUriForFile(getContext(),getContext().getPackageName()+".fileprovider",apk);Intent install=new Intent(Intent.ACTION_VIEW);install.setDataAndType(uri,"application/vnd.android.package-archive");install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_ACTIVITY_NEW_TASK);getContext().startActivity(install);call.resolve(new JSObject());
+            }catch(Exception e){call.reject(e.getMessage()==null?"A frissítés telepítője nem indítható el.":e.getMessage(),e);}finally{if(connection!=null)connection.disconnect();}
+        }).start();
+    }
     @PluginMethod public void registerPush(PluginCall call) {
         if(Build.VERSION.SDK_INT>=33&&getPermissionState("notifications")!=PermissionState.GRANTED){requestPermissionForAlias("notifications",call,"notificationPermission");return;}
         registerToken(call);
