@@ -20,7 +20,7 @@ async function send(uid,data,voip=false){
     const session=http2.connect(c.production?'https://api.push.apple.com':'https://api.sandbox.push.apple.com');
     try{
       await new Promise((resolve,reject)=>{
-        const req=session.request({':method':'POST',':path':'/3/device/'+token,authorization:'bearer '+appleJwt(c),'apns-topic':c.bundleId+(voip?'.voip':''),'apns-push-type':voip?'voip':'alert','apns-priority':'10','apns-expiration':voip?'0':String(Math.floor(Date.now()/1000)+86400),'apns-collapse-id':data.tag.slice(0,64)});
+        const req=session.request({':method':'POST',':path':'/3/device/'+token,authorization:'bearer '+appleJwt(c),'apns-topic':c.bundleId+(voip?'.voip':''),'apns-push-type':voip?'voip':'alert','apns-priority':'10','apns-expiration':voip?'0':String(Math.floor(Date.now()/1000)+2419200),'apns-collapse-id':data.tag.slice(0,64)});
         let status;req.on('response',h=>status=h[':status']);req.on('data',()=>{});req.on('error',reject);session.on('error',reject);
         req.on('end',async()=>{if(status===200)resolve();else if(status===410||status===400){await db().ref('pushDevices/'+uid+'/'+id+'/'+(voip?'voipToken':'token')).remove();resolve();}else reject(new Error('APNs delivery failed: '+status));});
         req.end(JSON.stringify(voip?{aps:{},...data}:{aps:{alert:{title:data.title,subtitle:data.isGroup==='true'?data.senderName:'',body:data.body},sound:'default','mutable-content':1,'thread-id':data.chatId},...data}));

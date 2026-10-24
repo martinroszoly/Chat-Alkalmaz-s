@@ -29,7 +29,7 @@ Az Android és iOS projektek a repóban vannak. A `www` csomag és a natív webe
    - a Web App URL-jét írd a `push-config.json` `pushGatewayUrl` mezőjébe;
    - telepítsd az adatbázisszabályokat: `firebase deploy --only database`.
 
-   A webapp a küldéskor értesíti az Android FCM-tokeneket. A telefon lezárva vagy másik alkalmazás használata közben is a rendszer értesítési felületén jelzi az üzenetet, illetve a bejövő hívást. A `free-push-worker` mappa megmarad tartalék Cloudflare-változatnak.
+   A webapp a küldéskor értesíti az Android FCM-tokeneket és az iPhone főképernyős webappjainak Web Push-tokenjeit. A függő értesítéseket a rendszer legfeljebb 28 napig őrzi kézbesítésre; ez nem jár le 28 nap után az app értesítési jogosultsága vagy tokenje. A regisztráció addig használható, amíg az app telepítve van, az engedély aktív, és az eszköz tokenje érvényes; tokenfrissítéskor az app újra regisztrál. A `free-push-worker` mappa megmarad tartalék Cloudflare-változatnak.
 
 3. **Web push:** a Firebase → Projektbeállítások → Cloud Messaging → Web Push certificates nyilvános VAPID kulcsát írd a `push-config.json` `vapidKey` mezőjébe. A webes fájlokat a meglévő GitHub Pages kiadással kell publikálni. Az értesítés gomb kér engedélyt. iPhone-on a webapphoz főképernyős telepítés és push-t támogató iOS szükséges.
 4. **Profilkép értesítésben:** az értesítési szerver a képet a projekt Storage bucketjében tárolja és egy napig érvényes aláírt URL-t készít. Engedélyezett Storage és a függvény szolgáltatásfiókjának Storage hozzáférés, valamint aláírási jogosultság (`iam.serviceAccounts.signBlob`) szükséges. Ha ez nincs beállítva, az üzenet megérkezik, de az értesítés monogramot/appikont használ.

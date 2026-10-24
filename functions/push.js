@@ -42,7 +42,7 @@ async function sendFcm(uid,data){
   const entries=Object.entries(devices).filter(([,d])=>d.token&&d.platform!=='ios'&&d.updatedAt>Date.now()-60*86400000);
   if(!entries.length)return;
   const link='https://chat-alkalmazas-578c8.web.app/?'+(data.callId?'call='+encodeURIComponent(data.callId):'chat='+encodeURIComponent(data.chatId||''));
-  const webpush={headers:{Urgency:'high',TTL:data.type==='call'?'60':'86400'}};
+  const webpush={headers:{Urgency:'high',TTL:data.type==='call'?'60':'2419200'}};
   if(data.type!=='call-ended'){
     webpush.notification={
       title:data.title||'Pulze-pro',body:data.body||'Új üzenet',
@@ -54,7 +54,7 @@ async function sendFcm(uid,data){
     };
     webpush.fcmOptions={link};
   }
-  const results=await getMessaging().sendEach(entries.map(([,d])=>({token:d.token,data,android:{priority:'high',ttl:data.type==='call'?60000:86400000},webpush})));
+  const results=await getMessaging().sendEach(entries.map(([,d])=>({token:d.token,data,android:{priority:'high',ttl:data.type==='call'?60000:2419200000},webpush})));
   await Promise.all(results.responses.map((r,i)=>r.error&&['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(r.error.code)?db().ref('pushDevices/'+uid+'/'+entries[i][0]).remove():Promise.resolve()));
   const retry=results.responses.find(r=>r.error&&!['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(r.error.code));if(retry)throw retry.error;
 }

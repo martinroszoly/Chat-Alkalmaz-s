@@ -24,7 +24,7 @@ async function verifyFirebaseIdToken(token){
 }
 async function database(path,token){const response=await fetch(DATABASE_URL+'/'+path+'.json',{headers:{authorization:'Bearer '+token}});if(!response.ok)throw new Error('Adatbázis hiba');return response.json();}
 const clean=value=>String(value||'').slice(0,1000);
-async function sendOne(token,data,accessToken){const message={token,data,android:{priority:'high',ttl:data.type==='call'?'60s':'86400s'}};const response=await fetch('https://fcm.googleapis.com/v1/projects/'+PROJECT_ID+'/messages:send',{method:'POST',headers:{authorization:'Bearer '+accessToken,'content-type':'application/json'},body:JSON.stringify({message})});if(!response.ok){const text=await response.text();if(!/UNREGISTERED|INVALID_ARGUMENT/.test(text))throw new Error('FCM küldési hiba');}}
+async function sendOne(token,data,accessToken){const message={token,data,android:{priority:'high',ttl:data.type==='call'?'60s':'2419200s'}};const response=await fetch('https://fcm.googleapis.com/v1/projects/'+PROJECT_ID+'/messages:send',{method:'POST',headers:{authorization:'Bearer '+accessToken,'content-type':'application/json'},body:JSON.stringify({message})});if(!response.ok){const text=await response.text();if(!/UNREGISTERED|INVALID_ARGUMENT/.test(text))throw new Error('FCM küldési hiba');}}
 async function notify(event,env){
  const service=JSON.parse(env.FIREBASE_SERVICE_ACCOUNT),accessToken=await googleToken(service),uid=event.uid,avatarData=typeof event.avatarData==='string'&&event.avatarData.startsWith('data:image/')&&event.avatarData.length<3500?event.avatarData:'';
  if(event.kind==='message'){

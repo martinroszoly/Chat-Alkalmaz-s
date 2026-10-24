@@ -163,6 +163,11 @@ test('accepting a request atomically repairs both users friend rows',async()=>{
  dom.window.close();
 });
 
+test('push queue TTL is 28 days and Apps Script endpoint exposes a health check',()=>{
+ const gateway=fs.readFileSync('free-push-apps-script/Code.gs','utf8'),functions=fs.readFileSync('functions/push.js','utf8'),apple=fs.readFileSync('functions/apple-push.js','utf8'),worker=fs.readFileSync('free-push-worker/src/worker.js','utf8');
+ assert(gateway.includes("?'60':'2419200'"));assert(gateway.includes("?'60s':'2419200s'"));assert(gateway.includes('function doGet()'));
+ assert(functions.includes("?'60':'2419200'"));assert(functions.includes('?60000:2419200000'));assert(apple.includes('+2419200'));assert(worker.includes("?'60s':'2419200s'"));
+});
 test('iOS web push requires a Home Screen app and sends a visible FCM notification',()=>{
  const notifications=fs.readFileSync('notifications.js','utf8'),worker=fs.readFileSync('sw.js','utf8'),gateway=fs.readFileSync('free-push-apps-script/Code.gs','utf8');
  assert(notifications.includes('needsIOSHomeScreen()'));
